@@ -11,4 +11,4 @@
 #include <dirent.h>
 #include <arpa/inet.h>
 
-int create_socket();
+int create_socket(char *interface_name);
