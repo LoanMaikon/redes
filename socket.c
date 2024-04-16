@@ -19,7 +19,6 @@ int create_socket(char *interface_name) {
         exit(-1);
     }
 
-
     memset(&endereco, 0, sizeof(endereco));
     endereco.sll_family = AF_PACKET;
     endereco.sll_protocol = htons(ETH_P_ALL);
@@ -28,7 +27,6 @@ int create_socket(char *interface_name) {
         printf("Erro no bind\n");
         exit(-1);
     }
-
 
     memset(&mr, 0, sizeof(mr));
     mr.mr_ifindex = ir.ifr_ifindex;
