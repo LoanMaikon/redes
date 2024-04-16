@@ -2,8 +2,8 @@
 
 int create_socket(char *interface_name) {
     int socket_fd;
-    // struct sockaddr_ll socket_address;
-    // struct ifreq ifr;
+    struct sockaddr_ll socket_address;
+    struct ifreq ifr;
 
     socket_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if (socket_fd < 0) {
@@ -11,17 +11,17 @@ int create_socket(char *interface_name) {
         return -1;
     }
 
-    // memset(&ifr, 0, sizeof(ifr));
-    // strncpy(ifr.ifr_name, interface_name, IFNAMSIZ - 1);
-    // memset(&socket_address, 0, sizeof(socket_address));
-    // socket_address.sll_family = AF_PACKET;
-    // socket_address.sll_protocol = htons(ETH_P_ALL);
-    // socket_address.sll_ifindex = ifr.ifr_ifindex;
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, interface_name, IFNAMSIZ - 1);
+    memset(&socket_address, 0, sizeof(socket_address));
+    socket_address.sll_family = AF_PACKET;
+    socket_address.sll_protocol = htons(ETH_P_ALL);
+    socket_address.sll_ifindex = ifr.ifr_ifindex;
 
-    // if (bind(socket_fd, (struct sockaddr *)&socket_address, sizeof(socket_address)) < 0) {
-    //     perror("Erro ao fazer bind\n");
-    //     return -1;
-    // }
+    if (bind(socket_fd, (struct sockaddr *)&socket_address, sizeof(socket_address)) < 0) {
+        perror("Erro ao fazer bind\n");
+        return -1;
+    }
 
     return socket_fd;
 }
