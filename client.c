@@ -13,7 +13,7 @@
 #include "socket.h"
 
 int main() {
-    int client_socket = create_socket("eth0");
+    int client_socket = create_socket("enp1s0");
     char buffer[1024] = {0};
     int status;
 
