@@ -1,3 +1,6 @@
+#ifndef SOCKET_H
+#define SOCKET_H
+
 #include <arpa/inet.h>
 #include <net/ethernet.h>
 #include <linux/if_packet.h>
@@ -6,3 +9,5 @@
 #include <stdio.h>
 
 int create_socket(char *interface_name);
+
+#endif
