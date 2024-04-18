@@ -8,17 +8,19 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <errno.h>
 
 #include "socket.h"
 
 int main() {
-    int client_socket = create_socket("enp1s0");
+    int client_socket = create_socket("lo");
     char buffer[1024] = {0};
     int status;
 
     status = connect(client_socket, NULL, 0);
     if (status < 0) {
         perror("Erro ao conectar\n");
+        printf("%d\n", errno);
         return -1;
     }
 

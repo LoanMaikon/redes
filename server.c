@@ -12,7 +12,7 @@
 #include "socket.h"
 
 int main() {
-    int server_socket = create_socket("enp1s0");
+    int server_socket = create_socket("lo");
     int new_socket;
     char *message = "hello";
 
