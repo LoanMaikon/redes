@@ -18,11 +18,9 @@ int main() {
 
     listen(server_socket, 5);
 
-    while (1) {
-        new_socket = accept(server_socket, NULL, NULL);
+    new_socket = accept(server_socket, NULL, NULL);
 
-        send(new_socket, message, strlen(message), 0);
-    }
+    send(new_socket, message, strlen(message), 0);
 
     close(server_socket);
 
