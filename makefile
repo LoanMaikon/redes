@@ -1,25 +1,22 @@
-CFLAGS = -Wall
-LDFLAGS = -lm
 CC = gcc
-objects = client server *.o
-all: client server
-    
+CFLAGS = -Wall -g
 
-client: client.o socket.o
-	$(CC) -o client client.o socket.o $(LDFLAGS)
+all: server client
 
-server: server.o socket.o
-	$(CC) -o server server.o socket.o $(LDFLAGS)
+server: obj/server.o obj/socket_handler.o
+	$(CC) $(CFLAGS) -o server obj/server.o obj/socket_handler.o
 
+client: obj/client.o obj/socket_handler.o
+	$(CC) $(CFLAGS) -o client obj/client.o obj/socket_handler.o
 
-socket.o: socket.c
-	$(CC) -c $(CFLAGS) socket.c
+obj/server.o: src/server.c
+	$(CC) $(CFLAGS) -c src/server.c -o obj/server.o
 
-client.o: client.c
-	$(CC) -c $(CFLAGS) client.c
+obj/client.o: src/client.c
+	$(CC) $(CFLAGS) -c src/client.c -o obj/client.o
 
-server.o: server.c
-	$(CC) -c $(CFLAGS) server.c
+obj/socket_handler.o: src/socket_handler.c
+	$(CC) $(CFLAGS) -c src/socket_handler.c -o obj/socket_handler.o
 
 clean:
-	rm -f $(objects)
+	rm -f server client obj/*.o
