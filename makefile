@@ -1,22 +1,18 @@
 CC = gcc
 CFLAGS = -Wall -g
 
+COMMON_OBJS = obj/socket_handler.o obj/common_packets.o
+
 all: server client
 
-server: obj/server.o obj/socket_handler.o
-	$(CC) $(CFLAGS) -o server obj/server.o obj/socket_handler.o
+server: obj/server.o $(COMMON_OBJS)
+	$(CC) $(CFLAGS) -o server obj/server.o $(COMMON_OBJS)
 
-client: obj/client.o obj/socket_handler.o
-	$(CC) $(CFLAGS) -o client obj/client.o obj/socket_handler.o
+client: obj/client.o $(COMMON_OBJS)
+	$(CC) $(CFLAGS) -o client obj/client.o $(COMMON_OBJS)
 
-obj/server.o: src/server.c
-	$(CC) $(CFLAGS) -c src/server.c -o obj/server.o
-
-obj/client.o: src/client.c
-	$(CC) $(CFLAGS) -c src/client.c -o obj/client.o
-
-obj/socket_handler.o: src/socket_handler.c
-	$(CC) $(CFLAGS) -c src/socket_handler.c -o obj/socket_handler.o
+obj/%.o: src/%.c
+	$(CC) $(CFLAGS) -c $< -o $@ $(LFLAGS)
 
 clean:
 	rm -f server client obj/*.o
