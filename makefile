@@ -11,7 +11,13 @@ server: obj/server.o $(COMMON_OBJS)
 client: obj/client.o $(COMMON_OBJS)
 	$(CC) $(CFLAGS) -o client obj/client.o $(COMMON_OBJS)
 
-obj/%.o: src/%.c
+obj/server.o: src/server.c 
+	$(CC) $(CFLAGS) -c $< -o $@ $(LFLAGS)
+
+obj/client.o: src/client.c
+	$(CC) $(CFLAGS) -c $< -o $@ $(LFLAGS)
+
+obj/%.o: src/%.c header/%.h
 	$(CC) $(CFLAGS) -c $< -o $@ $(LFLAGS)
 
 clean:
