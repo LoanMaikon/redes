@@ -90,26 +90,59 @@ int send_movies_list(int sockfd, movies_t *movies) {
 
 /* Retorna 1 se todos os pacotes foram enviados com sucesso e 0 se nao foram. */
 int send_seg_packets(unsigned char **packets, int sockfd) {
-    unsigned char *buffer = malloc(sizeof(unsigned char) * PACKET_SIZE);
-    unsigned char seq = 0, seq_ack = 0;
-    unsigned long int i = 0;
-
-    while (packets[i]) {
-        if (send_packet(sockfd, packets[i]) == -1) {
-            continue;
-        }
-        if (!recv_packet_in_timeout(sockfd, buffer)) {
-            continue;
-        }
-        seq = get_packet_seq(packets[i]);
-
-        if (get_packet_code(buffer) == ACK_COD) {
-            seq_ack = get_packet_seq(buffer);
-            if (seq == seq_ack) {
-                i++;
-            }
-        } 
+    unsigned char *buffer, seq_ack;
+    unsigned int i, next_packet_i, initial_packet_i, initial_seq;
+    unsigned int seqs[WINDOW_SIZE];
+    
+    if (! buffer = malloc(sizeof(unsigned char) * PACKET_SIZE)) {
+        return 0;
     }
+
+    i = 0;
+    while (packets[i]) {
+        initial_packet_i = i;
+        next_packet_i = i;
+        initial_seq = get_packet_seq(packets[i]);
+
+        for (int t = 0, j = intial_seq; t < WINDOW_SIZE; t++) {
+            seqs[t] = j;
+            if (j + 1 == WINDOW_SIZE) {
+                j = 0;
+            }
+            else {
+                j++;
+            }
+        }
+
+        while (next_packet_i < initial_packet_i + WINDOW_SIZE && packets[next_packet_i]) {
+            if (!send_packet_with_confirm(sockfd, packets[next_packet_i], buffer)) {
+                break;
+            }
+            next_packet_i++;
+        }
+
+        while (1) {
+            if (!recv_packet_in_timeout(sockfd, buffer)) {
+                break;
+            }
+
+            if (get_packet_code(buffer) == ACK_COD) {
+                seq_ack = get_packet_seq(buffer);
+
+                for (int t = 0; t < WINDOW_SIZE; t++) {
+                    if (seqs[t] == seq_ack) {
+                        i = initial_packet_i + t + 1;
+                        if (i == initial_packet_i + WINDOW_SIZE) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }        
+    }
+
+    free(buffer);
+
     return 1;
 }
 

@@ -17,7 +17,8 @@ typedef struct movies {
     unsigned long int num_movies;
 } movies_t;
 
-#define DATA_SIZE 63000 
+#define DATA_SIZE 63000
+#define WINDOW_SIZE 5
 
 unsigned int get_num_files_dir(DIR *dir);
 
