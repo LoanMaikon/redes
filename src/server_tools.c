@@ -131,13 +131,15 @@ int send_seg_packets(unsigned char **packets, int sockfd) {
 
                 for (int t = 0; t < WINDOW_SIZE; t++) {
                     if (seqs[t] == seq_ack) {
-                        i = initial_packet_i + t + 1;
+                        if (initial_packet_i + t + 1 > i) {
+                            i = initial_packet_i + t + 1;
+                        }
                         break;
                     }
                 }
             }
 
-            if (i == initial_packet_i + WINDOW_SIZE) {
+            if (i == next_packet_i + 1) {
                 break;
             }
         }
