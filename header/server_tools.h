@@ -22,8 +22,11 @@ typedef struct window_packet_t {
     struct window_packet_t *next_packet;
 } window_packet_t;
 
-#define DATA_SIZE 63000
-#define WINDOW_SIZE 5
+typedef struct window_packet_head_t {
+    window_packet_t *head;
+    window_packet_t *tail;
+    unsigned long int size;
+} window_packet_head_t;
 
 unsigned int get_num_files_dir(DIR *dir);
 
@@ -36,7 +39,7 @@ void list_files_in_dir(char *dir_path, movies_t *movies);
 int send_movies_list(int sockfd, movies_t *movies);
 
 /* Retorna 1 se todos os pacotes foram enviados com sucesso e 0 se nao foram. */
-int send_packets_in_window(window_packet_t *w_packet_head, int sockfd);
+int send_packets_in_window(int sockfd, FILE *file_to_send);
 
 /* Retorna 1 se o arquivo foi enviado com sucesso e 0 se nao foi. */
 int send_file(int sockfd, char *file_name);
@@ -52,9 +55,8 @@ int send_file_desc(int sockfd, char *file_name);
 void free_window_packet_list(window_packet_t *w_packet_head);
 
 /* (Aloca memoria). Monta uma lista window_packet_t de pacotes a partir
- * de um vetor de dados.
- * Retorna o primeiro nodo da lista. */
-window_packet_t *segment_data_in_packets(unsigned char *data, 
+ * de um vetor de dados. */
+window_packet_head_t *segment_data_in_window_packets(unsigned char *data, 
                                         const unsigned long int size, 
                                         unsigned char last_packet_code,
                                         unsigned char *sequence);
