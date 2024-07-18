@@ -205,6 +205,7 @@ int send_packets_in_window(int sockfd, FILE *file_to_send) {
     }
     w_packet_head = get_next_segment_file(file_to_send, &last_packet_sequence, buffer_data);
     w_packet = w_packet_head->head;
+    unsigned char code;
 
     while (w_packet) {
         if (!send_window(sockfd, w_packet)){
@@ -212,8 +213,12 @@ int send_packets_in_window(int sockfd, FILE *file_to_send) {
             break;
         }
         clear_socket_buffer(sockfd);
-        if (!recv_ACK_or_NACK(sockfd, client_packet)) {
-            continue;
+        while (1) {
+            recv_packet_in_timeout(sockfd, client_packet, 0);
+            code = get_packet_code(client_packet);
+            if (code == ACK_COD || code == NACK_COD) {
+                break;
+            }
         }
 
         w_packet = move_window_until_last_sent_packet(w_packet, client_packet,
