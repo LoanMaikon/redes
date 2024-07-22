@@ -23,14 +23,9 @@ def estabilish_connection(sock, player):
     if player.get_id() == 1:
         recebeu = False
         while not recebeu:
-            #sock.send_packet(init_packet, player.get_addr2())
-            sock.sock.sendto(init_packet, player.get_addr2())
+            sock.send_packet(init_packet, player.get_addr2())
 
-            #data, _ = sock.receive_packet(SOCKET_BUFFER_SIZE)
-            try:
-                data, _ = sock.sock.recvfrom(SOCKET_BUFFER_SIZE)
-            except:
-                continue
+            data, _ = sock.receive_packet(SOCKET_BUFFER_SIZE)
 
             if data:
                 print("Conexão estabelecida")
@@ -38,44 +33,19 @@ def estabilish_connection(sock, player):
         
     else:
         while True:
-            #data, _ = sock.receive_packet(SOCKET_BUFFER_SIZE)
-            try:
-                data, _ = sock.sock.recvfrom(SOCKET_BUFFER_SIZE)
-            except:
-                continue
+            data, _ = sock.receive_packet(SOCKET_BUFFER_SIZE)
             if data:
+                print(data.decode())
                 break
         
         while True:
-            #sock.send_packet(init_packet, player.get_addr2())
-            sock.sock.sendto(init_packet, player.get_addr2())
-
-
-    #     recebeu = False
-    #     while not recebeu:
-    #         sock.sendto(msg.encode(), addr2)
-
-    #         data, addr = sock.recvfrom(1024)
-            
-    #         if data:
-    #             print("Mensagem recebida: ", data.decode())
-    #             recebeu = True
-        
-    # else:
-    #     while True:
-    #         data, addr = sock.recvfrom(1024)
-    #         if data:
-    #             print("Mensagem recebida: ", data.decode())
-    #             break
-        
-    #     while True:
-    #         sock.sendto(data, addr2)
+            sock.send_packet(init_packet, player.get_addr2())
 
 def main():
     player_number = get_input()
     player = Player(player_number)
 
-    sock = SocketHandler()
+    sock = SocketHandler(player.get_addr1())
     sock.setTimeOut(0.1)
 
     estabilish_connection(sock, player)

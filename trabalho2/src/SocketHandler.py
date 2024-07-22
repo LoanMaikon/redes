@@ -1,8 +1,9 @@
 import socket
 
 class SocketHandler:
-    def __init__(self):
+    def __init__(self, addr):
         self.sock = self.create_socket()
+        self.sock.bind(addr)
     
     '''
     Create a DGRAM socket
