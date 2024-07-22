@@ -25,7 +25,6 @@ class SocketHandler:
             data, addr = self.sock.recvfrom(socket_buffer_size)
             return data, addr
         except:
-            print("não recebeu")
             return None, None
     
     '''

@@ -18,28 +18,48 @@ def get_input():
     return player_number
 
 def estabilish_connection(sock, player):
-    init_packet = 'conexao_estabelecida'.encode() # Fazer um packet depois
+    estabilished_connetion_packet = 'conexao_estabelecida' # Fazer um packet depois
+    init_game = 'iniciar_jogo' # Fazer um packet depois
 
     if player.get_id() == 1:
         recebeu = False
         while not recebeu:
-            sock.send_packet(init_packet, player.get_addr2())
+            sock.send_packet(estabilished_connetion_packet.encode(), player.get_addr2())
 
             data, _ = sock.receive_packet(SOCKET_BUFFER_SIZE)
 
-            if data:
+            if data and data.decode() == 'conexao_estabelecida':
+                sock.send_packet(init_game.encode(), player.get_addr2())
+
                 print("Conexão estabelecida")
                 recebeu = True
         
     else:
         while True:
             data, _ = sock.receive_packet(SOCKET_BUFFER_SIZE)
-            if data:
-                print(data.decode())
+            if data and data.decode() == 'conexao_estabelecida':
                 break
         
         while True:
-            sock.send_packet(init_packet, player.get_addr2())
+            sock.send_packet(estabilished_connetion_packet.encode(), player.get_addr2())
+
+            data, _ = sock.receive_packet(SOCKET_BUFFER_SIZE)
+
+            if data and data.decode() == 'iniciar_jogo':
+                sock.send_packet(init_game.encode(), player.get_addr2())
+
+                print("Conexão estabelecida")
+                break
+
+def create_deck(player_id):
+    deck = None
+    if player_id == 1:
+        deck = Deck()
+    
+    return deck
+
+def distribute_cards(deck, player, sock):
+    pass
 
 def main():
     player_number = get_input()
@@ -49,6 +69,9 @@ def main():
     sock.setTimeOut(0.1)
 
     estabilish_connection(sock, player)
+
+    deck = create_deck(player.get_id())
+    distribute_cards(deck, player, sock)
 
 if __name__ == "__main__":
     main()
