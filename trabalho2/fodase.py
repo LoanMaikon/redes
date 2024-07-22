@@ -18,7 +18,6 @@ def main():
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(addr1)
-    sock.settimeout(0.1)
 
     if player == 1:
         msg = input("Digite a mensagem: ")
@@ -26,10 +25,8 @@ def main():
         recebeu = False
         while not recebeu:
             sock.sendto(msg.encode(), addr2)
-            try:
-                data, addr = sock.recvfrom(1024)
-            except:
-                continue
+
+            data, addr = sock.recvfrom(1024)
             
             if data:
                 print("Mensagem recebida: ", data.decode())
