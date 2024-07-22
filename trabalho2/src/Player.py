@@ -12,8 +12,8 @@ class Player:
         self.baston = True if id == 1 else False
         self.guessing = -1
         self.n_cards = 5
-        self.distributer = True if id == 1 else False
         self.msg_to_send = Queue()
+        self.manager = True if id == 1 else False
 
     '''
     Return the player id
@@ -58,3 +58,9 @@ class Player:
     '''
     def get_str_cards(self, cards):
         return ''.join([card.get_str_card() for card in cards])
+    
+    '''
+    Return the next player id
+    '''
+    def get_next_player(self):
+        return self.id + 1 if self.id < 4 else 1

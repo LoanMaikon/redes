@@ -5,6 +5,7 @@ class Deck:
     def __init__(self):
         self.values_power, self.suits_power = self.get_default_power_order()
         self.deck = self.create_deck()
+        self.shuffle_deck()
 
     '''
     Compare two cards. Return 1 if card1 is better, 2 if card2 is better and 0 if they are equal
@@ -74,3 +75,18 @@ class Deck:
     '''
     def shuffle_deck(self):
         random.shuffle(self.cards)
+    
+    '''
+    Turn a card from the deck
+    '''
+    def turn_card(self):
+        turned_card = self.deck.pop()
+        self.order_power_by_shackle(turned_card)
+
+    '''
+    Reset the deck to its default
+    '''
+    def reset_deck(self):
+        self.deck = self.create_deck()
+        self.shuffle_deck()
+        self.reset_power_order()

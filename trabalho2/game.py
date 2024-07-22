@@ -2,6 +2,7 @@ from src.Card import Card
 from src.Deck import Deck
 from src.Player import Player
 from src.SocketHandler import SocketHandler
+from src.RoundManager import RoundManager
 
 import src.packets as packets
 
@@ -18,11 +19,63 @@ def main():
 
     estabilish_connection(sock, player)
 
-    deck = Deck()
+    roundManager = RoundManager()
 
-    main_loop(deck, player, sock)
+    main_loop(player, sock, roundManager)
 
-def main_loop(deck, player, sock):
+def main_loop(player, sock, roundManager):
+    while True:
+        if player.baston and player.manager and player.msg_to_send.empty():
+            roundManager.next_round()
+            pass_round_manager(player, sock, roundManager)
+            pass_baston(player, sock, roundManager)
+            continue
+
+        data, _ = sock.receive_packet(SOCKET_BUFFER_SIZE)
+        if not data:
+            continue
+
+        data_json = data.decode()
+
+        if data_json['dest'] != player.get_id():
+            sock.send_packet(data, player.get_addr2())
+            continue
+
+        if data_json['type'] == packets.TYPE_PASS_BASTON:
+            pass_baston(player, sock, roundManager)
+        
+        elif data_json['type'] == packets.TYPE_DISTRIBUTE_CARDS:
+            distribute_cards(player, sock, roundManager)
+
+        elif data_json['type'] == packets.TYPE_GUESS:
+            guess(player, sock, roundManager)
+        
+        elif data_json['type'] == packets.TYPE_PLAY_CARD:
+            play_card(player, sock, roundManager)
+
+        elif data_json['type'] == packets.TYPE_CHANGE_MANAGER:
+            change_manager(player, sock, roundManager)
+
+def pass_baston(player, sock, roundManager):
+    # use player.get_next_player()
+    pass
+
+def distribute_cards(player, sock, roundManager):
+    pass
+
+def guess(player, sock, roundManager):
+    pass
+
+def play_card(player, sock, roundManager):
+    pass
+
+def pass_round_manager(player, sock, roundManager):
+    # copy the roundManager to the next manager
+    # add things to the queue of the new manager
+    pass
+
+def change_manager(player, sock, roundManager):
+    # change the manager to the next player
     pass
 
 def get_input():
