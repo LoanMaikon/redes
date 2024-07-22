@@ -3,9 +3,27 @@ from src.Deck import Deck
 from src.Player import Player
 from src.SocketHandler import SocketHandler
 
+import src.packets as packets
+
 import socket
 
 SOCKET_BUFFER_SIZE = 1024
+
+def main():
+    player_number = get_input()
+    player = Player(player_number)
+
+    sock = SocketHandler(player.get_addr1())
+    sock.setTimeOut(0.1)
+
+    estabilish_connection(sock, player)
+
+    deck = Deck()
+
+    main_loop(deck, player, sock)
+
+def main_loop(deck, player, sock):
+    pass
 
 def get_input():
     print("Digite o player que deseja ser: ")
@@ -50,28 +68,6 @@ def estabilish_connection(sock, player):
 
                 print("Conexão estabelecida")
                 break
-
-def create_deck(player_id):
-    deck = None
-    if player_id == 1:
-        deck = Deck()
-    
-    return deck
-
-def distribute_cards(deck, player, sock):
-    pass
-
-def main():
-    player_number = get_input()
-    player = Player(player_number)
-
-    sock = SocketHandler(player.get_addr1())
-    sock.setTimeOut(0.1)
-
-    estabilish_connection(sock, player)
-
-    deck = create_deck(player.get_id())
-    distribute_cards(deck, player, sock)
 
 if __name__ == "__main__":
     main()

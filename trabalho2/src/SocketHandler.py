@@ -26,6 +26,15 @@ class SocketHandler:
             return data, addr
         except:
             return None, None
+        
+    '''
+    Wait until receive packet
+    '''
+    def wait_receive_packet(self, socket_buffer_size):
+        while True:
+            data, addr = self.receive_packet(socket_buffer_size)
+            if data:
+                return data, addr
     
     '''
     Set the socket timeout

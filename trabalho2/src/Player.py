@@ -1,5 +1,7 @@
 from .Card import Card
 
+from queue import Queue
+
 class Player:
     def __init__(self, id):
         self.id = id
@@ -7,6 +9,11 @@ class Player:
         self.addr1 = ("localhost", self.ports[0])
         self.addr2 = ("localhost", self.ports[1])
         self.cards = []
+        self.baston = True if id == 1 else False
+        self.guessing = -1
+        self.n_cards = 5
+        self.distributer = True if id == 1 else False
+        self.msg_to_send = Queue()
 
     '''
     Return the player id
@@ -25,6 +32,12 @@ class Player:
     '''
     def get_addr2(self):
         return self.addr2
+    
+    '''
+    Invert the state of baston
+    '''
+    def invert_baston(self):
+        self.baston = not self.baston
 
     '''
     Return the ports of the player
