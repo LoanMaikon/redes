@@ -1,30 +1,17 @@
+from Card import Card
 import random
 
-class Cards:
+class Deck:
     def __init__(self):
         self.values_power, self.suits_power = self.get_default_power_order()
         self.deck = self.create_deck()
 
     '''
-    Return the value of the card
-    card = [value, suit]
-    '''
-    def get_value(self, card):
-        return card[0]
-
-    '''
-    Return the suit of the card
-    card = [value, suit]
-    '''
-    def get_suit(self, card):
-        return card[1]
-
-    '''
     Compare two cards. Return 1 if card1 is better, 2 if card2 is better and 0 if they are equal
     '''
     def compare_cards(self, card1, card2):
-        value1 = self.get_value(card1)
-        value2 = self.get_value(card2)
+        value1 = card1.get_value()
+        value2 = card2.get_value()
 
         if self.values_power.index(value1) > self.values_power.index(value2):
             return 1
@@ -45,7 +32,11 @@ class Cards:
     Receive the turned_card and order the power of the cards by the shackle rule
     '''
     def order_power_by_shackle(self, turned_card):
-        shackle_index = self.values_power.index(turned_card.get_value(turned_card)) + 1 if turned_card.get_value(turned_card) != '3' else 0
+        turned_card_index = self.values_power.index(turned_card.get_value())
+        shackle_index = turned_card_index + 1
+        if shackle_index == len(self.values_power):
+            shackle_index = 0
+        
         shackle = self.values_power[shackle_index]
 
         del self.values_power[shackle_index]
@@ -71,10 +62,12 @@ class Cards:
     Create the deck based on all possible values and suits
     '''
     def create_deck(self):
-        self.deck = []
+        deck = []
         for value in self.values_power:
             for suit in self.suits_power:
-                self.deck.append([value, suit])
+                deck.append([value, suit])
+        
+        return deck
 
     '''
     Shuffle the deck of cards
