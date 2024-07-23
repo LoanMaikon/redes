@@ -6,8 +6,6 @@ from src.RoundManager import RoundManager
 
 import src.packets as packets
 
-import socket
-
 SOCKET_BUFFER_SIZE = 1024
 
 def main():
@@ -19,7 +17,7 @@ def main():
 
     estabilish_connection(sock, player)
 
-    roundManager = RoundManager()
+    roundManager = RoundManager(player.get_id())
 
     main_loop(player, sock, roundManager)
 
@@ -56,26 +54,41 @@ def main_loop(player, sock, roundManager):
         elif data_json['type'] == packets.TYPE_CHANGE_MANAGER:
             change_manager(player, sock, roundManager)
 
+        elif data_json['type'] == packets.TYPE_INFORM_PLAYED_CARD:
+            inform_played_card(player, sock, roundManager)
+
 def pass_baston(player, sock, roundManager):
-    # use player.get_next_player()
+    # use player.get_next_player() and send the baston to the next player
     pass
 
 def distribute_cards(player, sock, roundManager):
+    # the player who received it put the cards received in player.cards and show on the screen
     pass
 
 def guess(player, sock, roundManager):
+    # put in the player's queue the guess and wait for the baston
     pass
 
 def play_card(player, sock, roundManager):
+    # put in the player's queue the card and wait for the baston
     pass
 
 def pass_round_manager(player, sock, roundManager):
-    # copy the roundManager to the next manager
-    # add things to the queue of the new manager
+    # send the roundManager to the next manager
+    # send a change_manager message
     pass
 
 def change_manager(player, sock, roundManager):
-    # change the manager to the next player
+    # the player who received it becomes the manager, change player.manager to True and use start_queue()
+    pass
+
+def start_queue(player, sock, roundManager):
+    # Put all the buffers in the player's queue. These buffers make the game work
+    pass
+
+def inform_played_card(player, sock, roundManager):
+    # receive a card that was played by another player and show on the screen, also send it to the next player
+    # need to store who played the card and the card. stop sending when the next player is who played the card
     pass
 
 def get_input():

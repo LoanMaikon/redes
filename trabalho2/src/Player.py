@@ -10,7 +10,6 @@ class Player:
         self.addr2 = ("localhost", self.ports[1])
         self.cards = []
         self.baston = True if id == 1 else False
-        self.guessing = -1
         self.n_cards = 5
         self.msg_to_send = Queue()
         self.manager = True if id == 1 else False

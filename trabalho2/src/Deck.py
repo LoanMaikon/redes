@@ -66,7 +66,7 @@ class Deck:
         deck = []
         for value in self.values_power:
             for suit in self.suits_power:
-                deck.append([value, suit])
+                deck.append(Card(value, suit))
         
         return deck
 
@@ -74,7 +74,7 @@ class Deck:
     Shuffle the deck of cards
     '''
     def shuffle_deck(self):
-        random.shuffle(self.cards)
+        random.shuffle(self.deck)
     
     '''
     Turn a card from the deck
