@@ -13,6 +13,8 @@ class Player:
         self.n_cards = 5
         self.msg_to_send = Queue()
         self.manager = id == 1
+        self.waiting_for_response = False
+        self.passing_baston = False
 
     '''
     Return the player id

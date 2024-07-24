@@ -9,6 +9,7 @@ class RoundManager:
         self.players_n_cards = {i: 5 for i in self.alive_players}
         self.players_cards = {}
         self.round = 1
+        self.turned_card = None
 
     '''
     Attributes go to the next round. Deck reseted
@@ -16,6 +17,8 @@ class RoundManager:
     def next_round(self):
         self.deck.reset_deck()
         self.round += 1
+        self.turned_card = None
+        self.players_cards = {}
 
     '''
     Set the manager
@@ -37,4 +40,13 @@ class RoundManager:
         self.players_cards[player_id] = cards
 
         return cards
+    
+    '''
+    Turns a card from the deck and return it
+    '''
+    def turn_card(self):
+        self.turned_card = self.deck.turn_card()
+
+        return self.turned_card
+    
     

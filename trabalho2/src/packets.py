@@ -2,15 +2,21 @@ from .Card import Card
 
 import json
 
-TYPE_PASS_BASTON = 1
+TYPE_SWITCH_BASTON = 1
 TYPE_DISTRIBUTE_CARDS = 2
 TYPE_GUESS = 3
 TYPE_PLAY_CARD = 4
 TYPE_CHANGE_MANAGER = 5
 TYPE_INFORM_PLAYED_CARD = 6
+TYPE_INFORM_TURNED_CARD = 7
 
-def socket_pass_baston():
-    pass
+def socket_switch_baston(src, dest):
+    packet = {
+        'type': TYPE_SWITCH_BASTON,
+        'src': src,
+        'dest': dest,
+        'received': False
+    }
 
 def socket_distribute_cards(src, dest, cards):
     packet = {
@@ -26,14 +32,32 @@ def socket_distribute_cards(src, dest, cards):
 def socket_guess():
     pass
 
-def socket_play_card():
-    pass
+def socket_play_card(src, dest):
+    packet = {
+        'type': TYPE_PLAY_CARD,
+        'src': src,
+        'dest': dest,
+        'received': False
+    }
+
+    return packet
 
 def socket_change_manager():
     pass
 
 def socket_inform_played_card():
     pass
+
+def socket_inform_turned_card(src, dest, turned_card):
+    packet = {
+        'type': TYPE_INFORM_TURNED_CARD,
+        'src': src,
+        'dest': dest,
+        'turned_card': turned_card.to_list(),
+        'received': False
+    }
+
+    return packet
 
 def same_packet(packet1, packet2):
     keys1 = packet1.keys()

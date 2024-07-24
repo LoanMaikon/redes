@@ -7,15 +7,15 @@ class Card():
     Return the value of the card
     card = [value, suit]
     '''
-    def get_value(self, card):
-        return card[0]
+    def get_value(self):
+        return self.value
 
     '''
     Return the suit of the card
     card = [value, suit]
     '''
-    def get_suit(self, card):
-        return card[1]
+    def get_suit(self):
+        return self.suit
     
     '''
     Return the string of the card
