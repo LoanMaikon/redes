@@ -19,10 +19,18 @@ def main():
 
     roundManager = RoundManager(player.get_id())
 
+    if player.manager:
+        start_queue(player, sock, roundManager)
+
     main_loop(player, sock, roundManager)
 
 def main_loop(player, sock, roundManager):
+    actual_packet = player.get_next_msg()
+    if actual_packet:
+        sock.send_packet(packets.encode_packet(actual_packet), player.get_addr2())
+
     while True:
+        # Se o player é o bastão, é o gerente e não tem mais mensagens para enviar, uma nova rodada é começada
         if player.baston and player.manager and player.msg_to_send.empty():
             roundManager.next_round()
             pass_round_manager(player, sock, roundManager)
@@ -33,62 +41,98 @@ def main_loop(player, sock, roundManager):
         if not data:
             continue
 
-        data_json = data.decode()
+        data_json = packets.decode_packet(data)
 
-        if data_json['dest'] != player.get_id():
+        # Se foi enviado pelo próprio player
+        if int(data_json['src']) == player.get_id():
+
+            # Se não foi recebido, reenvia
+            if not data_json['received']:
+                sock.send_packet(data, player.get_addr2())
+                continue
+            
+            # Se foi recebido
+            else:
+                # Se é o mesmo pacote que foi enviado pelo player destino
+                if packets.same_packet(data_json, actual_packet):
+
+                    # Desenfilera a próxima mensagem
+                    actual_packet = player.get_next_msg()
+
+                    # Se não tem mensagem para enviar, continua
+                    if not actual_packet:
+                        continue
+
+                    # Se o destino é o mesmo que a fonte, processa
+                    if actual_packet['dest'] == player.get_id():
+                        data_json = actual_packet
+
+                    # Se o destino é diferente, envia e continua
+                    else:
+                        sock.send_packet(packets.encode_packet(actual_packet), player.get_addr2())
+                        continue
+
+        if int(data_json['dest']) != player.get_id():
             sock.send_packet(data, player.get_addr2())
             continue
 
-        if data_json['type'] == packets.TYPE_PASS_BASTON:
-            pass_baston(player, sock, roundManager)
+        if int(data_json['type']) == packets.TYPE_PASS_BASTON:
+            pass_baston(player, sock, roundManager, data_json)
         
-        elif data_json['type'] == packets.TYPE_DISTRIBUTE_CARDS:
-            distribute_cards(player, sock, roundManager)
+        elif int(data_json['type']) == packets.TYPE_DISTRIBUTE_CARDS:
+            distribute_cards(player, sock, roundManager, data_json)
 
-        elif data_json['type'] == packets.TYPE_GUESS:
-            guess(player, sock, roundManager)
+        elif int(data_json['type']) == packets.TYPE_GUESS:
+            guess(player, sock, roundManager, data_json)
         
-        elif data_json['type'] == packets.TYPE_PLAY_CARD:
-            play_card(player, sock, roundManager)
+        elif int(data_json['type']) == packets.TYPE_PLAY_CARD:
+            play_card(player, sock, roundManager, data_json)
 
-        elif data_json['type'] == packets.TYPE_CHANGE_MANAGER:
-            change_manager(player, sock, roundManager)
+        elif int(data_json['type']) == packets.TYPE_CHANGE_MANAGER:
+            change_manager(player, sock, roundManager, data_json)
 
-        elif data_json['type'] == packets.TYPE_INFORM_PLAYED_CARD:
-            inform_played_card(player, sock, roundManager)
+        elif int(data_json['type']) == packets.TYPE_INFORM_PLAYED_CARD:
+            inform_played_card(player, sock, roundManager, data_json)
 
-def pass_baston(player, sock, roundManager):
+        data_json['received'] = True
+        sock.send_packet(packets.encode_packet(data_json), player.get_addr2())
+
+def pass_baston(player, sock, roundManager, data_json):
     # use player.get_next_player() and send the baston to the next player
     pass
 
-def distribute_cards(player, sock, roundManager):
-    # the player who received it put the cards received in player.cards and show on the screen
+def distribute_cards(player, sock, roundManager, data_json):
+    player.set_cards_from_json(data_json['cards'])
+
+    print("Cartas recebidas: ")
+    print(player.get_str_cards() + '\n')
     pass
 
-def guess(player, sock, roundManager):
+def guess(player, sock, roundManager, data_json):
     # put in the player's queue the guess and wait for the baston
     pass
 
-def play_card(player, sock, roundManager):
+def play_card(player, sock, roundManager, data_json):
     # put in the player's queue the card and wait for the baston
     pass
+
+def change_manager(player, sock, roundManager, data_json):
+    # the player who received it becomes the manager, change player.manager to True and use start_queue()
+    pass
+
+def inform_played_card(player, sock, roundManager, data_json):
+    # receive a card that was played by another player and show on the screen, also send it to the next player
+    # need to store who played the card and the card. stop sending when the next player is who played the card
+    pass
+
+def start_queue(player, sock, roundManager):
+    for i in range(1, 5):
+        id = player.get_next_player(i)
+        player.put_msg(packets.socket_distribute_cards(player.get_id(), id, roundManager.draw_cards(id)))
 
 def pass_round_manager(player, sock, roundManager):
     # send the roundManager to the next manager
     # send a change_manager message
-    pass
-
-def change_manager(player, sock, roundManager):
-    # the player who received it becomes the manager, change player.manager to True and use start_queue()
-    pass
-
-def start_queue(player, sock, roundManager):
-    # Put all the buffers in the player's queue. These buffers make the game work
-    pass
-
-def inform_played_card(player, sock, roundManager):
-    # receive a card that was played by another player and show on the screen, also send it to the next player
-    # need to store who played the card and the card. stop sending when the next player is who played the card
     pass
 
 def get_input():
@@ -106,8 +150,8 @@ def estabilish_connection(sock, player):
     init_game = 'iniciar_jogo' # Fazer um packet depois
 
     if player.get_id() == 1:
-        recebeu = False
-        while not recebeu:
+        received = False
+        while not received:
             sock.send_packet(estabilished_connetion_packet.encode(), player.get_addr2())
 
             data, _ = sock.receive_packet(SOCKET_BUFFER_SIZE)
@@ -116,7 +160,14 @@ def estabilish_connection(sock, player):
                 sock.send_packet(init_game.encode(), player.get_addr2())
 
                 print("Conexão estabelecida")
-                recebeu = True
+                received = True
+        
+        clean = False
+        while not clean:
+            data, _ = sock.receive_packet(SOCKET_BUFFER_SIZE)
+
+            if data and data.decode() == 'iniciar_jogo':
+                clean = True
         
     else:
         while True:
@@ -134,6 +185,8 @@ def estabilish_connection(sock, player):
 
                 print("Conexão estabelecida")
                 break
+    
+    print()
 
 if __name__ == "__main__":
     main()

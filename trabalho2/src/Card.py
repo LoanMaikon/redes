@@ -21,5 +21,14 @@ class Card():
     Return the string of the card
     card = [value, suit]
     '''
-    def get_str_card(self, card):
-        return self.get_value(card) + ' of ' + self.get_suit(card) + '\n'
+    def get_str_card(self):
+        return self.value + ' of ' + self.suit + '\n'
+    
+    '''
+    Transform a card in a list
+    '''
+    def to_list(self):
+        return [self.value, self.suit]
+    
+
+    

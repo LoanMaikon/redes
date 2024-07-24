@@ -1,10 +1,13 @@
 from .Deck import Deck
+from .Card import Card
 
 class RoundManager:
     def __init__(self, manager_id):
         self.deck = Deck()
         self.manager_id = manager_id
         self.alive_players = [1, 2, 3, 4]
+        self.players_n_cards = {i: 5 for i in self.alive_players}
+        self.players_cards = {}
         self.round = 1
 
     '''
@@ -25,3 +28,13 @@ class RoundManager:
     '''
     def kill_player(self, player_id):
         self.alive_players.remove(player_id)
+
+    '''
+    Draw n cards from the deck and attribute to a player. Return the cards drawed
+    '''
+    def draw_cards(self, player_id):
+        cards = self.deck.draw_cards(self.players_n_cards[player_id])
+        self.players_cards[player_id] = cards
+
+        return cards
+    
