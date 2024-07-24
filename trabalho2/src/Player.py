@@ -83,9 +83,23 @@ class Player:
         self.msg_to_send.put(msg)
 
     '''
+    Put a message in the first position of the queue
+    '''
+    def put_msg_first(self, msg):
+        with self.msg_to_send.mutex:
+            self.msg_to_send.queue.appendleft(msg)
+
+    '''
     Return the next message to send and pop it
     '''
     def get_next_msg(self):
         if not self.msg_to_send.empty():
             return self.msg_to_send.get()
         return None
+    
+    '''
+    Remove a card from the player cards and return it
+    '''
+    def play_card(self, card_number):
+        return self.cards.pop(card_number)
+

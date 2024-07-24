@@ -45,8 +45,16 @@ def socket_play_card(src, dest):
 def socket_change_manager():
     pass
 
-def socket_inform_played_card():
-    pass
+def socket_inform_played_card(src, dest, played_card):
+    packet = {
+        'type': TYPE_INFORM_PLAYED_CARD,
+        'src': src,
+        'dest': dest,
+        'played_card': played_card.to_list(),
+        'received': False
+    }
+
+    return packet
 
 def socket_inform_turned_card(src, dest, turned_card):
     packet = {

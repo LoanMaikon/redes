@@ -38,14 +38,15 @@ def main_loop(player, sock, roundManager):
                     pass_round_manager(player, sock, roundManager)
                     switch_baston(player, sock, roundManager)
                 else: # Passa o bastão
+                    player.waiting_for_response = True
                     sock.send_packet(packets.encode_packet(packets.socket_switch_baston(player.get_id(), player.get_next_player(1))), player.get_addr2())
-                    switch_baston(player, sock, roundManager)
+                    player.passing_baston = True
                 continue
             else: # Queue com mensagens para enviar. Envia a próxima
                 actual_packet = player.get_next_msg()
                 player.waiting_for_response = True
                 sock.send_packet(packets.encode_packet(actual_packet), player.get_addr2())
-                if actual_packet['type'] == packets.TYPE_SWITCH_BASTON
+                if actual_packet['type'] == packets.TYPE_SWITCH_BASTON:
                     player.passing_baston = True
                 continue
 
@@ -71,10 +72,11 @@ def main_loop(player, sock, roundManager):
                     # Se é o mesmo pacote que foi enviado pelo player destino
                     if packets.same_packet(data_json, actual_packet):
                         
-                        # Se player está passando o bastão, inverte o bastão e continua
-                        if player.passing_baston:
+                        # Se player está passando o bastão e a mensagem é do tipo de inverter o bastão, inverte o bastão e continua
+                        if player.passing_baston and data_json['type'] == packets.TYPE_SWITCH_BASTON:
                             player.invert_baston()
                             player.waiting_for_response = False
+                            player.passing_baston = False
                             continue
                         
                         else: # Senão, desenfilera a próxima mensagem
@@ -132,25 +134,39 @@ def distribute_cards(player, sock, roundManager, data_json):
     player.set_cards_from_json(data_json['cards'])
 
     print("Cartas recebidas: ")
-    print(player.get_str_cards() + '\n')
+    print(player.get_str_cards())
 
 def guess(player, sock, roundManager, data_json):
     # put in the player's queue the guess and wait for the baston
     pass
 
 def play_card(player, sock, roundManager, data_json):
-    # put in the player's queue the card and wait for the baston
-    #informar a carta jogada para os outros jogadores usando TYPE_INFORM_PLAYED_CARD
-    pass
+    played = False
+    while not played:
+        list_cards(player)
+        card_number = int(input("Digite o número da carta que deseja jogar: "))
+        if card_number < 1 or card_number > len(player.cards):
+            print("Número inválido. Digite novamente")
+            continue
+        played = True
+
+    card_played = player.play_card(card_number - 1)
+
+    # Informing other players about the card played
+    for i in range(1, 5):
+        player.put_msg_first(packets.socket_inform_played_card(player.get_id(), player.get_next_player(i), card_played))
+
+
+    print(packets.socket_inform_played_card(player.get_id(), player.get_next_player(i), card_played))
 
 def change_manager(player, sock, roundManager, data_json):
     # the player who received it becomes the manager, change player.manager to True and use start_queue()
     pass
 
 def inform_played_card(player, sock, roundManager, data_json):
-    # receive a card that was played by another player and show on the screen, also send it to the next player
-    # need to store who played the card and the card. stop sending when the next player is who played the card
-    pass
+    played_card = Card(data_json['played_card'][0], data_json['played_card'][1])
+
+    print(f"Carta jogada por Jogador {str(data_json['src'])}: ", played_card.get_str_card())
 
 def inform_turned_card(player, sock, roundManager, data_json):
     turned_card = Card(data_json['turned_card'][0], data_json['turned_card'][1])
@@ -169,13 +185,11 @@ def start_queue(player, sock, roundManager):
 
     # Informing the turned card to the players
     for i in range(1, 5):
-        id = player.get_next_player(i)
-        player.put_msg(packets.socket_inform_turned_card(player.get_id(), id, turned_card))
-
-    # Asking card from the plasyers
+        player.put_msg(packets.socket_inform_turned_card(player.get_id(), player.get_next_player(i), turned_card))
+####esqueci de pegar o guessing
+    # Asking card from the players
     for i in range(1, 5):
-        id = player.get_next_player(i)
-        player.put_msg(packets.socket_play_card(player.get_id(), id))
+        player.put_msg(packets.socket_play_card(player.get_id(), player.get_next_player(i)))
 
     # Passing the baston
     player.put_msg(packets.socket_switch_baston(player.get_id(), player.get_next_player(1)))
@@ -184,6 +198,11 @@ def pass_round_manager(player, sock, roundManager):
     # send the roundManager to the next manager
     # send a change_manager message
     pass
+
+def list_cards(player):
+    print("Suas cartas: ")
+    for i, card in enumerate(player.cards):
+        print(str(i + 1) + ". " + card.get_str_card())
 
 def get_input():
     print("Digite o player que deseja ser: ")
