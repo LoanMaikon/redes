@@ -9,6 +9,7 @@ TYPE_PLAY_CARD = 4
 TYPE_CHANGE_MANAGER = 5
 TYPE_INFORM_PLAYED_CARD = 6
 TYPE_INFORM_TURNED_CARD = 7
+TYPE_INFORM_PLAYER_TO_PLAY = 8
 
 def socket_switch_baston(src, dest):
     packet = {
@@ -17,6 +18,8 @@ def socket_switch_baston(src, dest):
         'dest': dest,
         'received': False
     }
+
+    return packet
 
 def socket_distribute_cards(src, dest, cards):
     packet = {
@@ -62,6 +65,16 @@ def socket_inform_turned_card(src, dest, turned_card):
         'src': src,
         'dest': dest,
         'turned_card': turned_card.to_list(),
+        'received': False
+    }
+
+    return packet
+
+def socket_inform_player_to_play(src, dest):
+    packet = {
+        'type': TYPE_INFORM_PLAYER_TO_PLAY,
+        'src': src,
+        'dest': dest,
         'received': False
     }
 

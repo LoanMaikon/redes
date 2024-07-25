@@ -85,9 +85,11 @@ class Player:
     '''
     Put a message in the first position of the queue
     '''
-    def put_msg_first(self, msg):
+    def put_msgs_first(self, msgs):
         with self.msg_to_send.mutex:
-            self.msg_to_send.queue.appendleft(msg)
+            for msg in reversed(msgs):
+                self.msg_to_send.queue.appendleft(msg)
+
 
     '''
     Return the next message to send and pop it
