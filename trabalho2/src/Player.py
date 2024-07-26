@@ -11,10 +11,16 @@ class Player:
         self.cards = []
         self.baston = id == 1
         self.n_cards = 5
+        self.guess = None
+        self.guessings = {i: None for i in range(1, 5)}
+        self.players_alive = [i for i in range(1, 5)]
+        self.still_to_guess = [i for i in range(1, 5)]
+        self.guessing_sums = 0
         self.msg_to_send = Queue()
         self.manager = id == 1
         self.waiting_for_response = False
         self.passing_baston = False
+        self.manager_id = None
 
     '''
     Return the player id
@@ -35,10 +41,16 @@ class Player:
         return self.addr2
     
     '''
-    Invert the state of baston
+    Set the baston to false
     '''
-    def invert_baston(self):
-        self.baston = not self.baston
+    def set_baston_to_false(self):
+        self.baston = False
+
+    '''
+    Set the baston to true
+    '''
+    def set_baston_to_true(self):
+        self.baston = True
 
     '''
     Return the ports of the player
@@ -90,7 +102,6 @@ class Player:
             for msg in reversed(msgs):
                 self.msg_to_send.queue.appendleft(msg)
 
-
     '''
     Return the next message to send and pop it
     '''
@@ -105,3 +116,55 @@ class Player:
     def play_card(self, card_number):
         return self.cards.pop(card_number)
 
+    '''
+    Set the player's guess
+    '''
+    def set_guess(self, guess):
+        self.guess = guess
+
+    '''
+    Get the player's guess
+    '''
+    def get_guess(self):
+        return self.guess
+
+    '''
+    Set the manager id of the game
+    '''
+    def set_manager_id(self, manager_id):
+        self.manager_id = manager_id
+
+    '''
+    Kill a player
+    '''
+    def kill_player(self, player_id):
+        self.players_alive.remove(player_id)
+
+    '''
+    Add a player's guessing
+    '''
+    def add_player_guessing(self, player_id, guessing):
+        if player_id == self.id:
+            self.set_guess(guessing)
+
+        self.guessings[player_id] = int(guessing)
+        self.still_to_guess.remove(player_id)
+        self.guessing_sums += int(guessing)
+    
+    '''
+    Return 1 if the player is the last player to guess
+    '''
+    def last_player_to_guess(self):
+        if len(self.still_to_guess) == 1 and self.still_to_guess[0] == self.id:
+            return 1
+        return 0
+    
+    '''
+    Return 1 if the guess is available, 0 if not
+    '''
+    def validate_guess(self, guessing):
+        if self.last_player_to_guess():
+            if self.guessing_sums + int(guessing) == len(self.players_alive):
+                return 0
+            
+        return 1

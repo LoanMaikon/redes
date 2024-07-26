@@ -10,6 +10,9 @@ TYPE_CHANGE_MANAGER = 5
 TYPE_INFORM_PLAYED_CARD = 6
 TYPE_INFORM_TURNED_CARD = 7
 TYPE_INFORM_PLAYER_TO_PLAY = 8
+TYPE_INFORM_PLAYER_TO_GUESS = 9
+TYPE_INFORM_PLAYER_GUESS = 10
+TYPE_INFORM_MANAGER_ID = 11
 
 def socket_switch_baston(src, dest):
     packet = {
@@ -32,8 +35,15 @@ def socket_distribute_cards(src, dest, cards):
 
     return packet
 
-def socket_guess():
-    pass
+def socket_guess(src, dest):
+    packet = {
+        'type': TYPE_GUESS,
+        'src': src,
+        'dest': dest,
+        'received': False
+    }
+
+    return packet
 
 def socket_play_card(src, dest):
     packet = {
@@ -75,6 +85,38 @@ def socket_inform_player_to_play(src, dest):
         'type': TYPE_INFORM_PLAYER_TO_PLAY,
         'src': src,
         'dest': dest,
+        'received': False
+    }
+
+    return packet
+
+def socket_inform_player_to_guess(src, dest):
+    packet = {
+        'type': TYPE_INFORM_PLAYER_TO_GUESS,
+        'src': src,
+        'dest': dest,
+        'received': False
+    }
+
+    return packet
+
+def socket_inform_player_guess(src, dest, guess):
+    packet = {
+        'type': TYPE_INFORM_PLAYER_GUESS,
+        'src': src,
+        'dest': dest,
+        'guess': guess,
+        'received': False
+    }
+
+    return packet
+
+def socket_inform_manager_id(src, dest, manager_id):
+    packet = {
+        'type': TYPE_INFORM_MANAGER_ID,
+        'src': src,
+        'dest': dest,
+        'manager_id': manager_id,
         'received': False
     }
 
