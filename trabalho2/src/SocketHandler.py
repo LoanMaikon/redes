@@ -24,6 +24,8 @@ class SocketHandler:
         try:
             data, addr = self.sock.recvfrom(socket_buffer_size)
             return data, addr
+        except KeyboardInterrupt:
+            exit(1)
         except:
             return None, None
         

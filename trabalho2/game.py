@@ -31,9 +31,9 @@ def main_loop(player, sock, roundManager):
         player.waiting_for_response = True
 
     while True:
-        print(f"Bastão: {player.baston}")
-        print(player.msg_to_send.queue)
-        print("Esperando resposta: ", player.waiting_for_response)
+        # print(f"Bastão: {player.baston}")
+        # print(player.msg_to_send.queue)
+        # print("Esperando resposta: ", player.waiting_for_response)
         if not player.waiting_for_response and player.baston:
             if player.msg_to_send.empty(): # Queue vazia
                 if player.manager: # Nova rodada começa se for o manager
@@ -183,9 +183,6 @@ def guess(player, sock, roundManager, data_json):
     messages_to_put_first.append(packets.socket_switch_baston(player.get_id(), player.get_next_player(1)))
     player.put_msgs_first(messages_to_put_first)
 
-    print("queue depois de adivinhar")
-    print(player.msg_to_send.queue)
-
 def play_card(player, sock, roundManager, data_json):
     played = False
     while not played:
@@ -205,10 +202,6 @@ def play_card(player, sock, roundManager, data_json):
     # Pass the baston
     messages_to_put_first.append(packets.socket_switch_baston(player.get_id(), player.get_next_player(1)))
     player.put_msgs_first(messages_to_put_first)
-
-
-    print("queue depois de jogar")
-    print(player.msg_to_send.queue)
 
 def change_manager(player, sock, roundManager, data_json):
     # the player who received it becomes the manager, change player.manager to True and use start_queue()
@@ -263,19 +256,9 @@ def start_queue(player, sock, roundManager):
     for i in range(1, 5):
         player.put_msg(packets.socket_inform_player_to_guess(player.get_id(), player.get_next_player(i)))
 
-    # Passing the baston
-    player.put_msg(packets.socket_switch_baston(player.get_id(), player.get_next_player(1)))
-
     # Asking card from the players
     for i in range(1, 5):
         player.put_msg(packets.socket_inform_player_to_play(player.get_id(), player.get_next_player(i)))
-
-    # Passing the baston
-    player.put_msg(packets.socket_switch_baston(player.get_id(), player.get_next_player(1)))
-
-
-    print("queue antes de tudo")
-    print(player.msg_to_send.queue)
 
 def pass_round_manager(player, sock, roundManager):
     # send the roundManager to the next manager
