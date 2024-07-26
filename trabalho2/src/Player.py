@@ -76,7 +76,7 @@ class Player:
     Return the string of the player cards
     '''
     def get_str_cards(self):
-        return ''.join([card.get_str_card() for card in self.cards])
+        return '  '.join([str(card) for card in self.cards])
     
     '''
     Return the next player id

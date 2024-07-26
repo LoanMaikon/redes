@@ -163,13 +163,13 @@ def switch_baston(player, sock, roundManager, data_json=None):
 def distribute_cards(player, sock, roundManager, data_json):
     player.set_cards_from_json(data_json['cards'])
 
-    print("Cartas recebidas: ")
+    print("\nCartas recebidas: ")
     print(player.get_str_cards())
 
 def guess(player, sock, roundManager, data_json):
     validated = False
     while not validated:
-        guess = int(input("Digite o número de rodadas que você acha que vai ganhar: "))
+        guess = int(input("\nPalpite de vitórias: "))
         if player.validate_guess(guess):
             validated = True
         else:
@@ -187,7 +187,7 @@ def play_card(player, sock, roundManager, data_json):
     played = False
     while not played:
         list_cards(player)
-        card_number = int(input("Digite o número da carta que deseja jogar: "))
+        card_number = int(input("\nJogue uma carta: "))
         if card_number < 1 or card_number > len(player.cards):
             print("Número inválido. Digite novamente")
             continue
@@ -210,7 +210,8 @@ def change_manager(player, sock, roundManager, data_json):
 def inform_played_card(player, sock, roundManager, data_json):
     played_card = Card(data_json['played_card'][0], data_json['played_card'][1])
 
-    print(f"Carta jogada por Jogador {str(data_json['src'])}: ", played_card.get_str_card())
+    if data_json['src'] != data_json['dest']:
+        print(f"\nJogador {str(data_json['src'])}: ", played_card)
 
     if player.manager:
         roundManager.remove_card_from_player(data_json['src'], played_card)
@@ -218,8 +219,8 @@ def inform_played_card(player, sock, roundManager, data_json):
 def inform_turned_card(player, sock, roundManager, data_json):
     turned_card = Card(data_json['turned_card'][0], data_json['turned_card'][1])
 
-    print("Carta virada: ")
-    print(turned_card.get_str_card())
+    print("\nCarta virada: ")
+    print(turned_card)
 
 def inform_player_to_play(player, sock, roundManager, data_json):
     player.put_msg(packets.socket_play_card(player.get_id(), player.get_id()))
@@ -228,7 +229,8 @@ def inform_player_to_guess(player, sock, roundManager, data_json):
     player.put_msg(packets.socket_guess(player.get_id(), player.get_id()))
 
 def inform_player_guess(player, sock, roundManager, data_json):
-    print(f"Jogador {str(data_json['src'])} disse que vai ganhar {str(data_json['guess'])}")
+    if data_json['src'] != data_json['dest']:
+        print(f"Jogador {str(data_json['src'])} disse que vai ganhar {str(data_json['guess'])}")
 
     player.add_player_guessing(data_json['src'], data_json['guess'])
 
@@ -236,10 +238,6 @@ def inform_player_manager_id(player, sock, roundManager, data_json):
     player.set_manager_id(data_json['manager_id'])
 
 def start_queue(player, sock, roundManager):
-    # Informing the manager id to the players
-    for i in range(1, 5):
-        player.put_msg(packets.socket_inform_manager_id(player.get_id(), player.get_next_player(i), player.get_id()))
-
     # Distributing the cards to the players
     for i in range(1, 5):
         id = player.get_next_player(i)
@@ -266,9 +264,9 @@ def pass_round_manager(player, sock, roundManager):
     pass
 
 def list_cards(player):
-    print("Suas cartas: ")
+    print("\nSuas cartas: ")
     for i, card in enumerate(player.cards):
-        print(str(i + 1) + ". " + card.get_str_card())
+        print(str(i + 1) + ". " + str(card))
 
 def get_input():
     print("Digite o player que deseja ser: ")

@@ -49,7 +49,7 @@ class Deck:
     def get_default_power_order(self):
         # Values and suits ordered by power. The first is the worst and the last is the best.
         values_power = ['4', '5', '6', '7', 'Q', 'J', 'K', 'A', '2', '3']
-        suits_power = ['Diamonds', 'Spades', 'Hearts', 'Clubs']
+        suits_power = ['D', 'S', 'H', 'C']
 
         return values_power, suits_power
 
