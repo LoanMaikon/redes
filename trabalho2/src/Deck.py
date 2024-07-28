@@ -8,16 +8,25 @@ class Deck:
         self.shuffle_deck()
 
     '''
-    Compare two cards. Return 1 if card1 is better, 2 if card2 is better and 0 if they are equal
+    Compare two cards. Return 1 if card1 is better, 0 if card2 is better
     '''
     def compare_cards(self, card1, card2):
         value1 = card1.get_value()
         value2 = card2.get_value()
 
-        if self.values_power.index(value1) > self.values_power.index(value2):
+        card1_value_index = self.values_power.index(value1)
+        card1_suit_index = self.suits_power.index(card1.get_suit())
+
+        card2_value_index = self.values_power.index(value2)
+        card2_suit_index = self.suits_power.index(card2.get_suit())
+
+        if card1_value_index > card2_value_index:
             return 1
-        elif self.values_power.index(value1) < self.values_power.index(value2):
-            return 2
+        
+        elif card1_value_index == card2_value_index:
+            if card1_suit_index > card2_suit_index:
+                return 1
+
         return 0
 
     '''

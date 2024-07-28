@@ -2,33 +2,25 @@ from .Deck import Deck
 from .Card import Card
 
 class RoundManager:
-    def __init__(self, manager_id):
+    def __init__(self):
         self.deck = Deck()
-        self.manager_id = manager_id
         self.alive_players = [1, 2, 3, 4]
         self.players_n_cards = {i: 5 for i in self.alive_players}
         self.players_guessings = {i: None for i in self.alive_players}
         self.players_that_are_guessing = [i for i in self.alive_players]
         self.prohibited_guess = len(self.alive_players)
         self.players_cards = {}
-        self.round = 1
+        self.round_winner_id = None
+        self.round_winner_card = None
         self.turned_card = None
 
     '''
     Attributes go to the next round. Deck reseted
     '''
     def next_round(self):
-        self.deck.reset_deck()
-        self.round += 1
-        self.turned_card = None
-        self.players_cards = {}
+        self.round_winner_id = None
+        self.round_winner_card = None
 
-    '''
-    Set the manager
-    '''
-    def set_manager(self, manager_id):
-        self.manager_id = manager_id
-    
     '''
     Kill a player by its id
     '''
@@ -51,6 +43,12 @@ class RoundManager:
         self.turned_card = self.deck.turn_card()
 
         return self.turned_card
+    
+    '''
+    Set turned card
+    '''
+    def set_turned_card(self, card):
+        self.turned_card = card
     
     '''
     When player plays a card, remove it from his cards
@@ -83,3 +81,11 @@ class RoundManager:
                 return 0
             
         return 1
+    
+    '''
+    Update the round winner if card is better
+    '''
+    def update_round_winner(self, winner_id, card):
+        if self.round_winner_card is None or self.deck.compare_cards(card, self.round_winner_card):
+            self.round_winner_id = winner_id
+            self.round_winner_card = card

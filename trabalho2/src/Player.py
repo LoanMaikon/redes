@@ -19,6 +19,7 @@ class Player:
         self.msg_to_send = Queue()
         self.manager = id == 1
         self.waiting_for_response = False
+        self.packet_waiting_response = None
         self.passing_baston = False
         self.manager_id = None
 
@@ -51,6 +52,12 @@ class Player:
     '''
     def set_baston_to_true(self):
         self.baston = True
+
+    '''
+    Clear the queue
+    '''
+    def clear_queue(self):
+        self.msg_to_send.queue.clear()
 
     '''
     Return the ports of the player
