@@ -134,6 +134,9 @@ def execute_packet(player, sock, roundManager, data_json):
     elif int(data_json['type']) == packets.TYPE_INFORM_END_ROUNDS:
         inform_end_rounds(player, sock, roundManager, data_json)
 
+    elif int(data_json['type']) == packets.TYPE_INFORM_GAME_OVER:
+        inform_game_over(player, sock, roundManager, data_json)
+
 def switch_baston(player, sock, roundManager, data_json=None):
     player.set_baston_to_true()
 
@@ -281,6 +284,11 @@ def inform_end_rounds(player, sock, roundManager, data_json):
     for i in range(1, 5):
         print(f"Jogador {str(i)}: {players_lives[str(i)]} vidas")
 
+def inform_game_over(player, sock, roundManager, data_json):
+    print(f"Jogador {str(data_json['winner_id'])} ganhou o jogo")
+
+    exit(0)
+
 def start_queue(player, sock, roundManager):
     # Distributing the cards to the players
     for i in range(1, 5):
@@ -312,7 +320,11 @@ def transfer_manager(player, sock, roundManager, round_winner_id, players_cards)
     for i in range(1, 5):
         player.put_msg(packets.socket_inform_round_winner(player.get_id(), player.get_next_player(i), round_winner_id))
 
-    player.put_msg(packets.socket_inform_to_change_manager(player.get_id(), round_winner_id, players_cards))
+    if not roundManager.is_over():
+        player.put_msg(packets.socket_inform_to_change_manager(player.get_id(), round_winner_id, players_cards))
+    else: # Game is over
+        for i in range(1, 5):
+            player.put_msg(packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), roundManager.get_last_alive_player()))
 
 def list_cards(player):
     print("\nSuas cartas: ")

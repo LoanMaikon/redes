@@ -207,3 +207,20 @@ class RoundManager:
     '''
     def reset_deck(self):
         self.deck.reset_deck()
+
+    '''
+    Return True if there's only one player alive
+    '''
+    def is_over(self):
+        if len(self.alive_players) == 1:
+            return True
+        return False
+
+    '''
+    Get last alive player
+    '''
+    def get_last_alive_player(self):
+        if len(self.alive_players) > 1:
+            return None
+        return self.alive_players[0]
+
