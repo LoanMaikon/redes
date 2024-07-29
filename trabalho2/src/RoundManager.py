@@ -7,9 +7,11 @@ class RoundManager:
         self.alive_players = [1, 2, 3, 4]
         self.players_n_cards = {i: 5 for i in self.alive_players}
         self.players_guessings = {i: None for i in self.alive_players}
+        self.players_wins = {i: 0 for i in self.alive_players}
         self.players_that_are_guessing = [i for i in self.alive_players]
+        self.players_lives = {i: 5 for i in self.alive_players}
         self.prohibited_guess = len(self.alive_players)
-        self.players_cards = {}
+        self.players_cards = {i: None for i in self.alive_players}
         self.round_winner_id = None
         self.round_winner_card = None
         self.turned_card = None
@@ -37,6 +39,24 @@ class RoundManager:
         return cards
     
     '''
+    Return the players_cards
+    '''
+    def get_players_cards_to_dict(self):
+        players_cards_new = {}
+        for player in self.players_cards:
+            players_cards_new[player] = [card.to_list() for card in self.players_cards[player]]
+
+        return players_cards_new
+    
+    '''
+    Set the players_cards
+    '''
+    def set_players_cards_from_json(self, players_cards):
+        self.players_cards_new = {}
+        for player in players_cards:
+            self.players_cards_new[int(player)] = [Card(card[0], card[1]) for card in players_cards[player]]
+    
+    '''
     Turns a card from the deck and return it
     '''
     def turn_card(self):
@@ -49,6 +69,7 @@ class RoundManager:
     '''
     def set_turned_card(self, card):
         self.turned_card = card
+        self.deck.order_power_by_shackle(card)
     
     '''
     When player plays a card, remove it from his cards
@@ -89,3 +110,59 @@ class RoundManager:
         if self.round_winner_card is None or self.deck.compare_cards(card, self.round_winner_card):
             self.round_winner_id = winner_id
             self.round_winner_card = card
+
+    '''
+    Add a win to a player
+    '''
+    def add_win_to_player(self, player_id):
+        self.players_wins[player_id] += 1
+
+    '''
+    Get the round winner
+    '''
+    def get_round_winner(self):
+        return self.round_winner_id
+
+    '''
+    Return 1 if all the players played all their cards, 0 if not
+    '''
+    def all_players_played(self):
+        for player in self.alive_players:
+            if len(self.players_cards[player]) > 0:
+                return 0
+        return 1
+    
+    '''
+    Print the lost lives of the players
+    '''
+    def print_lives(self):
+        for player in self.alive_players:
+            print(f'Player {player} has {self.players_lives[player]} lives')
+
+    '''
+    Recalculate lives of the players
+    '''
+    def recalculate_lives(self):
+        for player in self.alive_players:
+            diff = abs(self.players_guessings[player] - self.players_wins[player])
+
+            self.players_lives[player] -= diff
+
+            if self.players_lives[player] <= 0:
+                self.players_lives[player] = 0
+                self.kill_player(player)
+
+    '''
+    Clear informations 
+    '''
+    def clear(self):
+        self.players_n_cards = {i: self.players_lives[i] for i in self.alive_players}
+        self.players_guessings = {i: None for i in self.alive_players}
+        self.players_wins = {i: 0 for i in self.alive_players}
+        self.players_that_are_guessing = [i for i in self.alive_players]
+        self.players_cards = {}
+        self.round_winner_id = None
+        self.round_winner_card = None
+        self.turned_card = None
+        self.deck.reset_deck()
+        self.prohibited_guess = len(self.alive_players)

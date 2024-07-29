@@ -13,6 +13,8 @@ TYPE_INFORM_PLAYER_TO_PLAY = 8
 TYPE_INFORM_PLAYER_TO_GUESS = 9
 TYPE_INFORM_PLAYER_GUESS = 10
 TYPE_INFORM_TO_CHANGE_MANAGER = 11
+TYPE_INFORM_ROUND_WINNER = 12
+TYPE_INFORM_END_ROUNDS = 13
 
 def socket_switch_baston(src, dest):
     packet = {
@@ -118,9 +120,31 @@ def socket_inform_player_guess(src, dest, guess):
 
     return packet
 
-def socket_inform_to_change_manager(src, dest):
+def socket_inform_to_change_manager(src, dest, players_cards):
     packet = {
         'type': TYPE_INFORM_TO_CHANGE_MANAGER,
+        'src': src,
+        'dest': dest,
+        'players_cards': players_cards,
+        'received': False
+    }
+
+    return packet
+
+def socket_inform_round_winner(src, dest, winner):
+    packet = {
+        'type': TYPE_INFORM_ROUND_WINNER,
+        'src': src,
+        'dest': dest,
+        'winner': winner,
+        'received': False
+    }
+
+    return packet
+
+def socket_inform_end_rounds(src, dest):
+    packet = {
+        'type': TYPE_INFORM_END_ROUNDS,
         'src': src,
         'dest': dest,
         'received': False

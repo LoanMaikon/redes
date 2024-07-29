@@ -26,13 +26,18 @@ def main():
 
 def main_loop(player, sock, roundManager):
     while True:
-        # print(f"Bastão: {player.baston}")
-        # print(player.msg_to_send.queue)
-        # print("Esperando resposta: ", player.waiting_for_response)
+        print(f"Bastão: {player.baston}")
+        print(player.msg_to_send.queue)
+        print("Esperando resposta: ", player.waiting_for_response)
         if not player.waiting_for_response and player.baston:
             if player.msg_to_send.empty(): # Queue vazia
                 if player.manager: # Nova rodada começa se for o manager
-                    transfer_manager(player, sock, roundManager)
+                    round_winner_id = roundManager.get_round_winner()
+                    players_cards = roundManager.get_players_cards_to_dict()
+
+                    if roundManager.all_players_played():
+                        end_rounds(player, sock, roundManager)
+                    transfer_manager(player, sock, roundManager, round_winner_id, players_cards)
                 
                 # Passando o bastão
                 player.put_msg(packets.socket_switch_baston(player.get_id(), player.get_next_player(1)))
@@ -157,6 +162,12 @@ def execute_packet(player, sock, roundManager, data_json):
     elif int(data_json['type']) == packets.TYPE_INFORM_TO_CHANGE_MANAGER:
         inform_to_change_manager(player, sock, roundManager, data_json)
 
+    elif int(data_json['type']) == packets.TYPE_INFORM_ROUND_WINNER:
+        inform_round_winner(player, sock, roundManager, data_json)
+
+    elif int(data_json['type']) == packets.TYPE_INFORM_END_ROUNDS:
+        inform_end_rounds(player, sock, roundManager, data_json)
+
 def switch_baston(player, sock, roundManager, data_json=None):
     player.set_baston_to_true()
 
@@ -188,6 +199,13 @@ def play_card(player, sock, roundManager, data_json):
     while not played:
         list_cards(player)
         card_number = int(input("\nJogue uma carta: "))
+
+        try:
+            card_number = int(card_number)
+        except:
+            print("Número inválido. Digite novamente")
+            continue
+
         if card_number < 1 or card_number > len(player.cards):
             print("Número inválido. Digite novamente")
             continue
@@ -244,7 +262,27 @@ def inform_player_guess(player, sock, roundManager, data_json):
     roundManager.add_player_guessing(data_json['src'], data_json['guess'])
 
 def inform_to_change_manager(player, sock, roundManager, data_json):
+    roundManager.set_players_cards_from_json(data_json['players_cards'])
+
     player.put_msg(packets.socket_start_round(player.get_id(), player.get_id()))
+
+def inform_round_winner(player, sock, roundManager, data_json):
+    print(f"Jogador {str(data_json['winner'])} ganhou a rodada")
+
+    roundManager.add_win_to_player(data_json['winner'])
+
+def inform_end_rounds(player, sock, roundManager, data_json):
+    roundManager.recalculate_lives()
+    roundManager.clear()
+
+    print("\nFim da rodada")
+    print("\nPlacar: ")
+    for i in range(1, 5):
+        print(f"Jogador {str(i)}: {str(roundManager.get_wins(i))} vitórias")
+
+def end_rounds(player, sock, roundManager):
+    for i in range(1, 5):
+        player.put_msg(packets.socket_inform_end_rounds(player.get_id(), player.get_next_player(i)))
 
 def start_queue(player, sock, roundManager):
     # Distributing the cards to the players
@@ -267,11 +305,13 @@ def start_queue(player, sock, roundManager):
     for i in range(1, 5):
         player.put_msg(packets.socket_inform_player_to_play(player.get_id(), player.get_next_player(i)))
 
-def transfer_manager(player, sock, roundManager):
-    manager_packet = packets.socket_inform_to_change_manager(player.get_id(), roundManager.round_winner_id)
-    
+def transfer_manager(player, sock, roundManager, round_winner_id, players_cards):
     player.clear_queue()
-    player.put_msg(manager_packet)
+
+    for i in range(1, 5):
+        player.put_msg(packets.socket_inform_round_winner(player.get_id(), player.get_next_player(i), round_winner_id))
+
+    player.put_msg(packets.socket_inform_to_change_manager(player.get_id(), round_winner_id, players_cards))
 
 def list_cards(player):
     print("\nSuas cartas: ")

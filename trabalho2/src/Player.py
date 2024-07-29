@@ -170,6 +170,11 @@ class Player:
     Return 1 if the guess is available, 0 if not
     '''
     def validate_guess(self, guessing):
+        try:
+            guessing = int(guessing)
+        except:
+            return 0
+
         if self.last_player_to_guess():
             if self.guessing_sums + int(guessing) == len(self.players_alive):
                 return 0
