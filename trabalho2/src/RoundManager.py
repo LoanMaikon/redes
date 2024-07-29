@@ -36,6 +36,8 @@ class RoundManager:
         cards = self.deck.draw_cards(self.players_n_cards[str(player_id)])
         self.players_cards[str(player_id)] = cards
 
+        print(f'Player {player_id} tem {self.players_n_cards[str(player_id)]} cartas')
+
         return cards
     
     '''
@@ -47,6 +49,18 @@ class RoundManager:
             players_cards_new[str(player)] = [card.to_list() for card in self.players_cards[player]]
 
         return players_cards_new
+    
+    '''
+    Return a list of alive players
+    '''
+    def get_alive_players(self):
+        return self.alive_players
+    
+    '''
+    Return the players lives
+    '''
+    def get_players_lives(self):
+        return self.players_lives
     
     '''
     Set the players_cards
@@ -70,13 +84,23 @@ class RoundManager:
     def set_turned_card(self, card):
         self.turned_card = card
         self.deck.order_power_by_shackle(card)
+
+    '''
+    Return the turned card
+    '''
+    def get_turned_card(self):
+        return self.turned_card
     
     '''
     When player plays a card, remove it from his cards
     '''
     def remove_card_from_player(self, player, card):
         try:
-            self.players_cards[str(player)].remove(card)
+            for p_card in self.players_cards[str(player)]:
+                if p_card.get_value() == card.get_value() and p_card.get_suit() == card.get_suit():
+                    self.players_cards[str(player)].remove(p_card)
+                    return
+
         except:
             return
     
@@ -91,6 +115,12 @@ class RoundManager:
         self.players_that_are_guessing.remove(player_id)
 
         return 1
+    
+    '''
+    Return the players wins
+    '''
+    def get_players_wins(self):
+        return self.players_wins
 
     '''
     Return 1 if the guess is available, 0 if not
@@ -153,16 +183,27 @@ class RoundManager:
                 self.kill_player(player)
 
     '''
-    Clear informations 
+    Clear informations. Observation: it doesn't reset the deck
     '''
     def clear(self):
-        self.players_n_cards = {i: self.players_lives[i] for i in self.alive_players}
-        self.players_guessings = {i: None for i in self.alive_players}
-        self.players_wins = {i: 0 for i in self.alive_players}
+        self.players_n_cards = {str(i): self.players_lives[str(i)] for i in self.alive_players}
+        self.players_guessings = {str(i): None for i in self.alive_players}
+        self.players_wins = {str(i): 0 for i in self.alive_players}
         self.players_that_are_guessing = [i for i in self.alive_players]
         self.players_cards = {}
         self.round_winner_id = None
         self.round_winner_card = None
         self.turned_card = None
-        self.deck.reset_deck()
         self.prohibited_guess = len(self.alive_players)
+
+    '''
+    Return the number of wins of a player
+    '''
+    def get_player_wins(self, player_id):
+        return self.players_wins[str(player_id)]
+    
+    '''
+    Reset the deck
+    '''
+    def reset_deck(self):
+        self.deck.reset_deck()
