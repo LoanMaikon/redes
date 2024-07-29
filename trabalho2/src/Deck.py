@@ -90,7 +90,6 @@ class Deck:
     '''
     def turn_card(self):
         turned_card = self.deck.pop()
-        self.order_power_by_shackle(turned_card)
         
         return turned_card
 

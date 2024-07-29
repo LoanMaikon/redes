@@ -26,9 +26,9 @@ def main():
 
 def main_loop(player, sock, roundManager):
     while True:
-        print(f"Bastão: {player.baston}")
-        print(player.msg_to_send.queue)
-        print("Esperando resposta: ", player.waiting_for_response)
+        # print(f"Bastão: {player.baston}")
+        # print(player.msg_to_send.queue)
+        # print("Esperando resposta: ", player.waiting_for_response)
         if not player.waiting_for_response and player.baston:
             if player.msg_to_send.empty(): # Queue vazia
                 if player.manager: # Nova rodada começa se for o manager
@@ -64,58 +64,28 @@ def main_loop(player, sock, roundManager):
 
         data_json = packets.decode_packet(data)
 
-        message_from_player_itself = False
+        # Se player está esperando por uma mensagem de resposta e se foi enviado pelo próprio player
+        if player.waiting_for_response and int(data_json['src']) == player.get_id():
 
-        # Se player está esperando por uma mensagem de resposta
-        if player.waiting_for_response:
+            # Se não foi recebido, reenvia
+            if not data_json['received']:
+                sock.send_packet(data, player.get_addr2())
+                continue
+            
+            # Se foi recebido e é o mesmo pacote que foi enviado pelo player destino
+            elif packets.same_packet(data_json, actual_packet):
+    
+                # Se player está passando o bastão e a mensagem é do tipo de inverter o bastão, inverte o bastão e continua
+                if player.passing_baston and data_json['type'] == packets.TYPE_SWITCH_BASTON:
+                    player.set_baston_to_false()
+                    player.passing_baston = False
 
-            # Se foi enviado pelo próprio player
-            if int(data_json['src']) == player.get_id():
-
-                # Se não foi recebido, reenvia
-                if not data_json['received']:
-                    sock.send_packet(data, player.get_addr2())
-                    continue
+                # Se player está passando o manager e a mensagem é do tipo de passar o manager, passa o manager e continua
+                elif data_json['type'] == packets.TYPE_INFORM_TO_CHANGE_MANAGER:
+                    player.manager = False
                 
-                # Se foi recebido
-                else:
-                    # Se é o mesmo pacote que foi enviado pelo player destino
-                    if packets.same_packet(data_json, actual_packet):
-           
-                        # Se player está passando o bastão e a mensagem é do tipo de inverter o bastão, inverte o bastão e continua
-                        if player.passing_baston and data_json['type'] == packets.TYPE_SWITCH_BASTON:
-                            player.set_baston_to_false()
-                            player.waiting_for_response = False
-                            player.passing_baston = False
-                            continue
-
-                        # Se player está passando o manager e a mensagem é do tipo de passar o manager, passa o manager e continua
-                        elif data_json['type'] == packets.TYPE_INFORM_TO_CHANGE_MANAGER:
-                            player.manager = False
-                            player.waiting_for_response = False
-                            continue
-                        
-                        else: # Senão
-                            # Desenfilera a próxima mensagem
-                            actual_packet = player.get_next_msg()
-
-                            # Se não tem mensagem para enviar, continua
-                            if not actual_packet:
-                                player.waiting_for_response = False
-                                continue
-
-                            # Se o destino é o mesmo que a fonte, processa
-                            if actual_packet['dest'] == actual_packet['src']:
-                                player.waiting_for_response = False
-                                message_from_player_itself = True
-                                data_json = actual_packet
-
-                            # Se o destino é diferente, envia e continua
-                            else:
-                                sock.send_packet(packets.encode_packet(actual_packet), player.get_addr2())
-                                player.waiting_for_response = True
-                                player.packet_waiting_response = actual_packet
-                                continue
+                player.waiting_for_response = False
+                continue
 
         if int(data_json['dest']) != player.get_id():
             sock.send_packet(data, player.get_addr2())
@@ -123,10 +93,8 @@ def main_loop(player, sock, roundManager):
 
         execute_packet(player, sock, roundManager, data_json)
 
-        # Se não for o próprio player que enviou uma mensagem para si mesmo, passa a mensagem de resposta
-        if not message_from_player_itself:
-            data_json['received'] = True
-            sock.send_packet(packets.encode_packet(data_json), player.get_addr2())
+        data_json['received'] = True
+        sock.send_packet(packets.encode_packet(data_json), player.get_addr2())
 
 def execute_packet(player, sock, roundManager, data_json):
     if int(data_json['type']) == packets.TYPE_SWITCH_BASTON:
@@ -180,7 +148,12 @@ def distribute_cards(player, sock, roundManager, data_json):
 def guess(player, sock, roundManager, data_json):
     validated = False
     while not validated:
-        guess = int(input("\nPalpite de vitórias: "))
+        try:
+            guess = int(input("\nPalpite de vitórias: "))
+        except:
+            print("Número inválido. Digite novamente")
+            continue
+
         if player.validate_guess(guess):
             validated = True
         else:
@@ -198,7 +171,12 @@ def play_card(player, sock, roundManager, data_json):
     played = False
     while not played:
         list_cards(player)
-        card_number = int(input("\nJogue uma carta: "))
+
+        try:
+            card_number = int(input("\nJogue uma carta: "))
+        except:
+            print("Número inválido. Digite novamente")
+            continue
 
         try:
             card_number = int(card_number)
@@ -262,7 +240,7 @@ def inform_player_guess(player, sock, roundManager, data_json):
     roundManager.add_player_guessing(data_json['src'], data_json['guess'])
 
 def inform_to_change_manager(player, sock, roundManager, data_json):
-    roundManager.set_players_cards_from_json(data_json['players_cards'])
+    roundManager.set_players_cards_from_json(data_json['players_cards'].copy())
 
     player.put_msg(packets.socket_start_round(player.get_id(), player.get_id()))
 
