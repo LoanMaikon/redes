@@ -200,7 +200,7 @@ def play_card(player, sock, roundManager, data_json):
 
     messages_to_put_first = []
     # Informing other players about the card played
-    for i in range(1, 5): # 1 until 3 because the player itself is already informed
+    for i in range(1, 5):
         messages_to_put_first.append(packets.socket_inform_played_card(player.get_id(), player.get_next_player(i), card_played))
     # Pass the baston
     messages_to_put_first.append(packets.socket_switch_baston(player.get_id(), player.get_next_player(1)))
@@ -263,15 +263,18 @@ def inform_to_change_manager(player, sock, roundManager, data_json):
         player.put_msg(packets.socket_start_round(player.get_id(), player.get_id()))
 
     else: # Start a new series of rounds
+        roundManager.recalculate_lives()
+
         for i in range(1, 5):
             player.put_msg(packets.socket_inform_end_rounds(player.get_id(), player.get_next_player(i)))
 
-        # Clearing the roundManager and player
-        roundManager.recalculate_lives()
-        roundManager.clear()
-        player.clear(roundManager.get_alive_players())
+        # If there is only one player alive, the game is over
+        if roundManager.is_over():
+            for i in range(1, 5):
+                player.put_msgs_first([packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), roundManager.get_last_alive_player())])
+            return
 
-        # If the player is dead, it passes the manager to the next plaer alive
+        # If the player is dead, it passes the manager to the next player alive
         if not roundManager.is_player_alive(player.get_id()):
             for i in range(1, 5):
                 if roundManager.is_player_alive(player.get_next_player(i)):
@@ -282,6 +285,9 @@ def inform_to_change_manager(player, sock, roundManager, data_json):
             for i in range(1, 5):
                 player.put_msg(packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), roundManager.get_last_alive_player()))
             return
+        
+        roundManager.clear()
+        player.clear(roundManager.get_alive_players())
 
         start_queue(player, sock, roundManager)
 
@@ -291,7 +297,7 @@ def inform_round_winner(player, sock, roundManager, data_json):
     roundManager.add_win_to_player(data_json['winner'])
 
 def inform_end_rounds(player, sock, roundManager, data_json):
-    if not player.manager: # The manager is already cleaned
+    if not player.manager:
         roundManager.recalculate_lives()
         roundManager.clear()
 
@@ -344,7 +350,7 @@ def transfer_manager(player, sock, roundManager, round_winner_id, players_cards)
         player.put_msg(packets.socket_inform_to_change_manager(player.get_id(), round_winner_id, players_cards))
     else: # Game is over
         for i in range(1, 5):
-            player.put_msg(packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), roundManager.get_last_alive_player()))
+            player.put_msgs_first([packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), roundManager.get_last_alive_player())])
 
 def list_cards(player):
     print("\nSuas cartas: ")

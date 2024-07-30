@@ -15,6 +15,7 @@ class RoundManager:
         self.round_winner_id = None
         self.round_winner_card = None
         self.turned_card = None
+        self.recalculated_lives = False
 
     '''
     Attributes go to the next round. Deck reseted
@@ -145,6 +146,8 @@ class RoundManager:
     def add_win_to_player(self, player_id):
         self.players_wins[str(player_id)] += 1
 
+        self.recalculated_lives = False
+
     '''
     Get the round winner
     '''
@@ -179,6 +182,9 @@ class RoundManager:
     Recalculate lives of the players
     '''
     def recalculate_lives(self):
+        if self.recalculated_lives:
+            return
+
         for player in self.alive_players:
             diff = abs(self.players_guessings[str(player)] - self.players_wins[str(player)])
 
@@ -187,6 +193,8 @@ class RoundManager:
             if self.players_lives[str(player)] <= 0:
                 self.players_lives[str(player)] = 0
                 self.kill_player(player)
+        
+        self.recalculated_lives = True
 
     '''
     Clear informations. Observation: it doesn't reset the deck
