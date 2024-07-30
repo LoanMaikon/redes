@@ -36,8 +36,6 @@ class RoundManager:
         cards = self.deck.draw_cards(self.players_n_cards[str(player_id)])
         self.players_cards[str(player_id)] = cards
 
-        print(f'Player {player_id} tem {self.players_n_cards[str(player_id)]} cartas')
-
         return cards
     
     '''
@@ -163,6 +161,14 @@ class RoundManager:
         return 1
     
     '''
+    Return 1 if the player is alive
+    '''
+    def is_player_alive(self, player_id):
+        if player_id in self.alive_players:
+            return 1
+        return 0
+    
+    '''
     Print the lost lives of the players
     '''
     def print_lives(self):
@@ -224,3 +230,13 @@ class RoundManager:
             return None
         return self.alive_players[0]
 
+    '''
+    Return True if a player still have cards
+    '''
+    def player_has_cards(self, player_id):
+        if str(player_id) not in self.players_cards:
+            return False
+
+        if len(self.players_cards[str(player_id)]) > 0:
+            return True
+        return False

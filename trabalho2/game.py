@@ -207,13 +207,12 @@ def play_card(player, sock, roundManager, data_json):
     player.put_msgs_first(messages_to_put_first)
 
 def start_round(player, sock, roundManager, data_json):
-    player.manager = True
     player.clear_queue()
     roundManager.next_round()
 
     # Asking card from the players
     for i in range(1, 5):
-        if not player.is_player_alive(player.get_next_player(i)):
+        if not roundManager.is_player_alive(player.get_next_player(i)) or not roundManager.player_has_cards(player.get_next_player(i)):
             continue
         player.put_msg(packets.socket_inform_player_to_play(player.get_id(), player.get_next_player(i)))
 
@@ -249,19 +248,40 @@ def inform_player_guess(player, sock, roundManager, data_json):
     roundManager.add_player_guessing(data_json['src'], data_json['guess'])
 
 def inform_to_change_manager(player, sock, roundManager, data_json):
+    player.manager = True
     roundManager.set_players_cards_from_json(data_json['players_cards'].copy())
 
-    if not roundManager.all_players_played():
+    if not roundManager.all_players_played(): # Start a new round
+        # If the player has no cards, it passes the manager to the next player who has cards
+        if not roundManager.player_has_cards(player.get_id()):
+            for i in range(1, 5):
+                if roundManager.player_has_cards(player.get_next_player(i)):
+                    player.put_msg(packets.socket_inform_to_change_manager(player.get_id(), player.get_next_player(1),
+                                                                           roundManager.get_players_cards_to_dict()))
+                    return
+
         player.put_msg(packets.socket_start_round(player.get_id(), player.get_id()))
 
-    else: # Começa uma nova série de rodadas
+    else: # Start a new series of rounds
         for i in range(1, 5):
             player.put_msg(packets.socket_inform_end_rounds(player.get_id(), player.get_next_player(i)))
-        
+
         # Clearing the roundManager and player
         roundManager.recalculate_lives()
         roundManager.clear()
         player.clear(roundManager.get_alive_players())
+
+        # If the player is dead, it passes the manager to the next plaer alive
+        if not roundManager.is_player_alive(player.get_id()):
+            for i in range(1, 5):
+                if roundManager.is_player_alive(player.get_next_player(i)):
+                    player.put_msg(packets.socket_inform_to_change_manager(player.get_id(), player.get_next_player(i), roundManager.get_players_cards_to_dict()))
+                    return
+            
+            # if no player is alive, the game is over
+            for i in range(1, 5):
+                player.put_msg(packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), roundManager.get_last_alive_player()))
+            return
 
         start_queue(player, sock, roundManager)
 
@@ -287,13 +307,13 @@ def inform_end_rounds(player, sock, roundManager, data_json):
 def inform_game_over(player, sock, roundManager, data_json):
     print(f"Jogador {str(data_json['winner_id'])} ganhou o jogo")
 
-    exit(0)
+    player.clear_queue()
 
 def start_queue(player, sock, roundManager):
     # Distributing the cards to the players
     for i in range(1, 5):
         id = player.get_next_player(i)
-        if not player.is_player_alive(id):
+        if not roundManager.is_player_alive(id):
             continue
         player.put_msg(packets.socket_distribute_cards(player.get_id(), id, roundManager.draw_cards(id)))
 
@@ -306,13 +326,13 @@ def start_queue(player, sock, roundManager):
 
     # Asking guessings from the players
     for i in range(1, 5):
-        if not player.is_player_alive(player.get_next_player(i)):
+        if not roundManager.is_player_alive(player.get_next_player(i)):
             continue
         player.put_msg(packets.socket_inform_player_to_guess(player.get_id(), player.get_next_player(i)))
 
     # Asking card from the players
     for i in range(1, 5):
-        if not player.is_player_alive(player.get_next_player(i)):
+        if not roundManager.is_player_alive(player.get_next_player(i)):
             continue
         player.put_msg(packets.socket_inform_player_to_play(player.get_id(), player.get_next_player(i)))
 
