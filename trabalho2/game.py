@@ -270,8 +270,10 @@ def inform_to_change_manager(player, sock, roundManager, data_json):
 
         # If there is only one player alive, the game is over
         if roundManager.is_over():
+            msgs_to_put_first = []
             for i in range(1, 5):
-                player.put_msgs_first([packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), roundManager.get_last_alive_player())])
+                msgs_to_put_first.append(packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), roundManager.get_last_alive_player()))
+            player.put_msgs_first(msgs_to_put_first)
             return
 
         # If the player is dead, it passes the manager to the next player alive
@@ -282,8 +284,10 @@ def inform_to_change_manager(player, sock, roundManager, data_json):
                     return
             
             # if no player is alive, the game is over
+            msgs_to_put_first = []
             for i in range(1, 5):
-                player.put_msg(packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), roundManager.get_last_alive_player()))
+                msgs_to_put_first.append(packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), roundManager.get_last_alive_player()))
+            player.put_msgs_first(msgs_to_put_first)
             return
         
         roundManager.clear()
@@ -311,7 +315,7 @@ def inform_end_rounds(player, sock, roundManager, data_json):
         print(f"Jogador {str(i)}: {players_lives[str(i)]} vidas")
 
 def inform_game_over(player, sock, roundManager, data_json):
-    print(f"Jogador {str(data_json['winner_id'])} ganhou o jogo")
+    print(f"\nJogador {str(data_json['winner_id'])} ganhou o jogo")
 
     player.clear_queue()
 

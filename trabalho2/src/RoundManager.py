@@ -148,6 +148,8 @@ class RoundManager:
 
         self.recalculated_lives = False
 
+        print(f'Player {player_id} has {self.players_wins[str(player_id)]} wins')
+
     '''
     Get the round winner
     '''
