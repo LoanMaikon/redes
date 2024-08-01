@@ -31,6 +31,11 @@ def main_loop(player, sock, roundManager):
         # print("Esperando resposta: ", player.waiting_for_response)
         if not player.waiting_for_response and player.baston:
             if player.msg_to_send.empty(): # Queue vazia
+                # If game is over, pass the baston
+                if roundManager.game_over:
+                    player.put_msg(packets.socket_switch_baston(player.get_id(), player.get_next_player(1)))
+                    continue
+
                 if player.manager: # Nova rodada começa se for o manager
                     round_winner_id = roundManager.get_round_winner()
                     players_cards = roundManager.get_players_cards_to_dict()
@@ -286,7 +291,7 @@ def inform_to_change_manager(player, sock, roundManager, data_json):
             # if no player is alive, the game is over
             msgs_to_put_first = []
             for i in range(1, 5):
-                msgs_to_put_first.append(packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), roundManager.get_last_alive_player()))
+                msgs_to_put_first.append(packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), None))
             player.put_msgs_first(msgs_to_put_first)
             return
         
@@ -315,9 +320,13 @@ def inform_end_rounds(player, sock, roundManager, data_json):
         print(f"Jogador {str(i)}: {players_lives[str(i)]} vidas")
 
 def inform_game_over(player, sock, roundManager, data_json):
-    print(f"\nJogador {str(data_json['winner_id'])} ganhou o jogo")
+    if data_json['winner_id'] is None:
+        print("\nNinguém ganhou o jogo")
+    else:
+        print(f"\nJogador {str(data_json['winner_id'])} ganhou o jogo")
 
     player.clear_queue()
+    roundManager.game_over = True
 
 def start_queue(player, sock, roundManager):
     # Distributing the cards to the players

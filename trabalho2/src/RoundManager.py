@@ -16,6 +16,7 @@ class RoundManager:
         self.round_winner_card = None
         self.turned_card = None
         self.recalculated_lives = False
+        self.game_over = False
 
     '''
     Attributes go to the next round. Deck reseted
@@ -148,8 +149,6 @@ class RoundManager:
 
         self.recalculated_lives = False
 
-        print(f'Player {player_id} has {self.players_wins[str(player_id)]} wins')
-
     '''
     Get the round winner
     '''
@@ -187,7 +186,10 @@ class RoundManager:
         if self.recalculated_lives:
             return
 
-        for player in self.alive_players:
+        for player in range(1, 5):
+            if player not in self.alive_players:
+                continue
+
             diff = abs(self.players_guessings[str(player)] - self.players_wins[str(player)])
 
             self.players_lives[str(player)] -= diff
@@ -211,6 +213,7 @@ class RoundManager:
         self.round_winner_card = None
         self.turned_card = None
         self.prohibited_guess = len(self.alive_players)
+        self.deck.reset_deck()
 
     '''
     Return the number of wins of a player
@@ -236,7 +239,7 @@ class RoundManager:
     Get last alive player
     '''
     def get_last_alive_player(self):
-        if len(self.alive_players) > 1:
+        if len(self.alive_players) > 1 or len(self.alive_players) == 0:
             return None
         return self.alive_players[0]
 
