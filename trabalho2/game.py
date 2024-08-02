@@ -69,9 +69,18 @@ def main_loop(player, sock, roundManager):
 
         # Se player está esperando por uma mensagem de resposta e se foi enviado pelo próprio player
         if player.waiting_for_response and int(data_json['src']) == player.get_id():
+            
+            # Se a mensagem é de broadcast e o player está esperando por uma resposta, verifica se todos os pacotes foram recebidos
+            if str(data_json['dest']) == 'n':
+                data_json['received'][str(player.get_id())] = True
+
+                if packets.packet_all_received(data_json):
+                    player.waiting_for_response = False
+                    execute_packet(player, sock, roundManager, data_json)
+                    continue
 
             # Se não foi recebido, reenvia
-            if not data_json['received']:
+            elif not data_json['received']:
                 sock.send_packet(data, player.get_addr2())
                 continue
             
@@ -90,13 +99,16 @@ def main_loop(player, sock, roundManager):
                 player.waiting_for_response = False
                 continue
 
-        if int(data_json['dest']) != player.get_id():
+        if str(data_json['dest']) != 'n' and int(data_json['dest']) != player.get_id():
             sock.send_packet(data, player.get_addr2())
             continue
 
         execute_packet(player, sock, roundManager, data_json)
 
-        data_json['received'] = True
+        if data_json['dest'] == 'n':
+            data_json['received'][str(player.get_id())] = True
+        else:
+            data_json['received'] = True
         sock.send_packet(packets.encode_packet(data_json), player.get_addr2())
 
 def execute_packet(player, sock, roundManager, data_json):
@@ -139,7 +151,7 @@ def execute_packet(player, sock, roundManager, data_json):
     elif int(data_json['type']) == packets.TYPE_INFORM_END_ROUNDS:
         inform_end_rounds(player, sock, roundManager, data_json)
 
-    elif int(data_json['type']) == packets.TYPE_INFORM_GAME_OVER:
+    elif int(data_json['type']) == packets.TYPE_INFORM_GAME_OVER: ###
         inform_game_over(player, sock, roundManager, data_json)
 
 def switch_baston(player, sock, roundManager, data_json=None):
@@ -169,8 +181,7 @@ def guess(player, sock, roundManager, data_json):
     
     # Informing other player's about the guess
     messages_to_put_first = []
-    for i in range(1, 5):
-        messages_to_put_first.append(packets.socket_inform_player_guess(player.get_id(), player.get_next_player(i), guess))
+    messages_to_put_first.append(packets.socket_inform_player_guess(player.get_id(), guess))
     # Passing the baston
     messages_to_put_first.append(packets.socket_switch_baston(player.get_id(), player.get_next_player(1)))
     player.put_msgs_first(messages_to_put_first)
@@ -205,8 +216,7 @@ def play_card(player, sock, roundManager, data_json):
 
     messages_to_put_first = []
     # Informing other players about the card played
-    for i in range(1, 5):
-        messages_to_put_first.append(packets.socket_inform_played_card(player.get_id(), player.get_next_player(i), card_played))
+    messages_to_put_first.append(packets.socket_inform_played_card(player.get_id(), card_played))
     # Pass the baston
     messages_to_put_first.append(packets.socket_switch_baston(player.get_id(), player.get_next_player(1)))
     player.put_msgs_first(messages_to_put_first)
@@ -224,7 +234,7 @@ def start_round(player, sock, roundManager, data_json):
 def inform_played_card(player, sock, roundManager, data_json):
     played_card = Card(data_json['played_card'][0], data_json['played_card'][1])
 
-    if data_json['src'] != data_json['dest']:
+    if data_json['src'] != player.get_id():
         print(f"\nJogador {str(data_json['src'])}: ", played_card)
 
     roundManager.remove_card_from_player(data_json['src'], played_card)
@@ -245,7 +255,7 @@ def inform_player_to_guess(player, sock, roundManager, data_json):
     player.put_msg(packets.socket_guess(player.get_id(), player.get_id()))
 
 def inform_player_guess(player, sock, roundManager, data_json):
-    if data_json['src'] != data_json['dest']:
+    if data_json['src'] != player.get_id():
         print(f"Jogador {str(data_json['src'])} disse que vai ganhar {str(data_json['guess'])}")
 
     player.add_player_guessing(data_json['src'], data_json['guess'])
@@ -270,15 +280,11 @@ def inform_to_change_manager(player, sock, roundManager, data_json):
     else: # Start a new series of rounds
         roundManager.recalculate_lives()
 
-        for i in range(1, 5):
-            player.put_msg(packets.socket_inform_end_rounds(player.get_id(), player.get_next_player(i)))
+        player.put_msg(packets.socket_inform_end_rounds(player.get_id()))
 
         # If there is only one player alive, the game is over
         if roundManager.is_over():
-            msgs_to_put_first = []
-            for i in range(1, 5):
-                msgs_to_put_first.append(packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), roundManager.get_last_alive_player()))
-            player.put_msgs_first(msgs_to_put_first)
+            player.put_msgs_first([packets.socket_inform_game_over(player.get_id(), roundManager.get_last_alive_player())])
             return
 
         # If the player is dead, it passes the manager to the next player alive
@@ -289,10 +295,7 @@ def inform_to_change_manager(player, sock, roundManager, data_json):
                     return
             
             # if no player is alive, the game is over
-            msgs_to_put_first = []
-            for i in range(1, 5):
-                msgs_to_put_first.append(packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), None))
-            player.put_msgs_first(msgs_to_put_first)
+            player.put_msgs_first([packets.socket_inform_game_over(player.get_id(), None)])
             return
         
         roundManager.clear()
@@ -340,8 +343,7 @@ def start_queue(player, sock, roundManager):
     turned_card = roundManager.turn_card()
 
     # Informing the turned card to the players
-    for i in range(1, 5):
-        player.put_msg(packets.socket_inform_turned_card(player.get_id(), player.get_next_player(i), turned_card))
+    player.put_msg(packets.socket_inform_turned_card(player.get_id(), turned_card))
 
     # Asking guessings from the players
     for i in range(1, 5):
@@ -356,14 +358,12 @@ def start_queue(player, sock, roundManager):
         player.put_msg(packets.socket_inform_player_to_play(player.get_id(), player.get_next_player(i)))
 
 def transfer_manager(player, sock, roundManager, round_winner_id, players_cards):
-    for i in range(1, 5):
-        player.put_msg(packets.socket_inform_round_winner(player.get_id(), player.get_next_player(i), round_winner_id))
+    player.put_msg(packets.socket_inform_round_winner(player.get_id(), round_winner_id))
 
     if not roundManager.is_over():
         player.put_msg(packets.socket_inform_to_change_manager(player.get_id(), round_winner_id, players_cards))
     else: # Game is over
-        for i in range(1, 5):
-            player.put_msgs_first([packets.socket_inform_game_over(player.get_id(), player.get_next_player(i), roundManager.get_last_alive_player())])
+        player.put_msgs_first([packets.socket_inform_game_over(player.get_id(), roundManager.get_last_alive_player())])
 
 def list_cards(player):
     print("\nSuas cartas: ")

@@ -69,24 +69,34 @@ def socket_start_round(src, dest):
 
     return packet
 
-def socket_inform_played_card(src, dest, played_card):
+def socket_inform_played_card(src, played_card):
     packet = {
         'type': TYPE_INFORM_PLAYED_CARD,
         'src': src,
-        'dest': dest,
+        'dest': 'n',
         'played_card': played_card.to_list(),
-        'received': False
+        'received': {
+            '1': False,
+            '2': False,
+            '3': False,
+            '4': False
+        }
     }
 
     return packet
 
-def socket_inform_turned_card(src, dest, turned_card):
+def socket_inform_turned_card(src, turned_card):
     packet = {
         'type': TYPE_INFORM_TURNED_CARD,
         'src': src,
-        'dest': dest,
+        'dest': 'n',
         'turned_card': turned_card.to_list(),
-        'received': False
+        'received': {
+            '1': False,
+            '2': False,
+            '3': False,
+            '4': False
+        }
     }
 
     return packet
@@ -111,13 +121,18 @@ def socket_inform_player_to_guess(src, dest):
 
     return packet
 
-def socket_inform_player_guess(src, dest, guess):
+def socket_inform_player_guess(src, guess):
     packet = {
         'type': TYPE_INFORM_PLAYER_GUESS,
         'src': src,
-        'dest': dest,
+        'dest': 'n',
         'guess': guess,
-        'received': False
+        'received': {
+            '1': False,
+            '2': False,
+            '3': False,
+            '4': False
+        }
     }
 
     return packet
@@ -133,23 +148,33 @@ def socket_inform_to_change_manager(src, dest, players_cards):
 
     return packet
 
-def socket_inform_round_winner(src, dest, winner):
+def socket_inform_round_winner(src, winner):
     packet = {
         'type': TYPE_INFORM_ROUND_WINNER,
         'src': src,
-        'dest': dest,
+        'dest': 'n',
         'winner': winner,
-        'received': False
+        'received': {
+            '1': False,
+            '2': False,
+            '3': False,
+            '4': False
+        }
     }
 
     return packet
 
-def socket_inform_end_rounds(src, dest):
+def socket_inform_end_rounds(src):
     packet = {
         'type': TYPE_INFORM_END_ROUNDS,
         'src': src,
-        'dest': dest,
-        'received': False
+        'dest': 'n',
+        'received': {
+            '1': False,
+            '2': False,
+            '3': False,
+            '4': False
+        }
     }
 
     return packet
@@ -164,13 +189,18 @@ def socket_inform_manager_to_turn_card(src, dest):
 
     return packet
 
-def socket_inform_game_over(src, dest, winner_id):
+def socket_inform_game_over(src, winner_id):
     packet = {
         'type': TYPE_INFORM_GAME_OVER,
         'src': src,
-        'dest': dest,
+        'dest': 'n',
         'winner_id': winner_id,
-        'received': False
+        'received': {
+            '1': False,
+            '2': False,
+            '3': False,
+            '4': False
+        }
     }
 
     return packet
@@ -184,6 +214,13 @@ def same_packet(packet1, packet2):
             continue
 
         if not key in keys2 or packet1[key] != packet2[key]:
+            return False
+    
+    return True
+
+def packet_all_received(packet):
+    for received in packet['received'].values():
+        if not received:
             return False
     
     return True
