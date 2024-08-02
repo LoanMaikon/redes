@@ -26,9 +26,6 @@ def main():
 
 def main_loop(player, sock, roundManager):
     while True:
-        # print(f"Bastão: {player.baston}")
-        # print(player.msg_to_send.queue)
-        # print("Esperando resposta: ", player.waiting_for_response)
         if not player.waiting_for_response and player.baston:
             if player.msg_to_send.empty(): # Queue vazia
                 # If game is over, pass the baston
@@ -77,6 +74,10 @@ def main_loop(player, sock, roundManager):
                 if packets.packet_all_received(data_json):
                     player.waiting_for_response = False
                     execute_packet(player, sock, roundManager, data_json)
+                    continue
+
+                else: # Reenvia
+                    sock.send_packet(packets.encode_packet(data_json), player.get_addr2())
                     continue
 
             # Se não foi recebido, reenvia
@@ -151,7 +152,7 @@ def execute_packet(player, sock, roundManager, data_json):
     elif int(data_json['type']) == packets.TYPE_INFORM_END_ROUNDS:
         inform_end_rounds(player, sock, roundManager, data_json)
 
-    elif int(data_json['type']) == packets.TYPE_INFORM_GAME_OVER: ###
+    elif int(data_json['type']) == packets.TYPE_INFORM_GAME_OVER:
         inform_game_over(player, sock, roundManager, data_json)
 
 def switch_baston(player, sock, roundManager, data_json=None):
@@ -381,8 +382,8 @@ def get_input():
     return player_number
 
 def estabilish_connection(sock, player):
-    estabilished_connetion_packet = 'conexao_estabelecida' # Fazer um packet depois
-    init_game = 'iniciar_jogo' # Fazer um packet depois
+    estabilished_connetion_packet = 'conexao_estabelecida'
+    init_game = 'iniciar_jogo'
 
     if player.get_id() == 1:
         received = False
