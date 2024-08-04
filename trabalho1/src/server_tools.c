@@ -216,16 +216,9 @@ int send_packets_in_window(int sockfd, FILE *file_to_send) {
             break;
         }
         if (!recv_ACK_or_NACK(sockfd, client_packet, 10)) {
-            printf("Cansou de esperar\n");
             success = 0;
             break;
         }
-
-        /* printf("seq %x: ", get_packet_seq(w_packet->packet)); */
-        /* for (short i = 0; i < PACKET_SIZE; i++) { */
-        /*     printf("%x ", w_packet->packet[i]); */
-        /* } */
-        /* printf("\n"); */
 
         w_packet = move_window_until_last_sent_packet(w_packet, client_packet,
                                                             &send_packet_count);
@@ -247,6 +240,7 @@ int send_packets_in_window(int sockfd, FILE *file_to_send) {
     }
     total_packets += send_packet_count;
     free(buffer_data);
+    free_window_packet_list(w_packet_head);
 
     return success;
 }
