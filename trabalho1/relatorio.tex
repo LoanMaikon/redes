@@ -16,5 +16,30 @@ O trabalho consiste em implementar uma plataforma de ``streaming" de vídeo, ond
 cliente pode fazer requisições para listar os vídeos disponíveis e para assistir a
 um vídeo. O link para o repositório do projeto é \url{https://github.com/LoanMaikon/redes/tree/main/trabalho1}
 
+\section{Decisões de implementação}
+Após rodar \texttt{make}, são gerados os executáveis \texttt{server} e \texttt{client}. 
+O uso dos programas é da seguinte forma: \texttt{sudo ./server <interface>}. Para o
+\texttt{client}, o uso é exatamente o mesmo.
+
+\subsection{Client}
+Ao rodar o \texttt{client}, são apresentadas as seguintes opções:
+\begin{enumerate}
+    \setlength\itemsep{-0.5em}
+    \item[1-]\texttt{Mostrar vídeos} \textit{\small{- Lista os vídeos disponíveis no servidor e seus respectivos IDs}}
+    \item[2-]\texttt{Baixar arquivo} \textit{\small{- Baixa um arquivo do servidor com base no ID do vídeo}}
+    \item[3-]\texttt{Sair} \textit{\small{- Encerra a execução do programa}}
+\end{enumerate}
+
+\subsection{Server}
+O primeiro passo do \texttt{server} é listar os vídeos disponíveis no diretório \texttt{movies/} e
+armazenar seus nomes em uma estrutura chamada \texttt{movies\_t}, a qual é composta de um vetor de
+strings e um \texttt{unsigned long int} para o tamanho do vetor. Em seguida, o servidor entra em um
+loop principal onde aguarda requisições do cliente.
+
+No loop principal, são esperadas requisições de listagem e download, outros tipos de pacotes são ignorados.
+
+Quando recebe um pedido de listagem, os nomes dos vídeos são enviados usando ``para-espera".
+A ordem de envio é com base nas informações contidas na estrutura \texttt{movies\_t}.
+
 \end{document}
 
