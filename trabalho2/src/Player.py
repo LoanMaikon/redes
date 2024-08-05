@@ -10,7 +10,6 @@ class Player:
         self.addr2 = ("localhost", self.ports[1])
         self.cards = []
         self.baston = id == 1
-        self.n_cards = 5
         self.guess = None
         self.guessings = {i: None for i in range(1, 5)}
         self.players_alive = [i for i in range(1, 5)]
@@ -19,8 +18,8 @@ class Player:
         self.msg_to_send = Queue()
         self.manager = id == 1
         self.waiting_for_response = False
+        self.packet_waiting_response = None
         self.passing_baston = False
-        self.manager_id = None
 
     '''
     Return the player id
@@ -53,6 +52,12 @@ class Player:
         self.baston = True
 
     '''
+    Clear the queue
+    '''
+    def clear_queue(self):
+        self.msg_to_send.queue.clear()
+
+    '''
     Return the ports of the player
     '''
     def set_ports(self):
@@ -76,7 +81,7 @@ class Player:
     Return the string of the player cards
     '''
     def get_str_cards(self):
-        return ''.join([card.get_str_card() for card in self.cards])
+        return '  '.join([str(card) for card in self.cards])
     
     '''
     Return the next player id
@@ -129,12 +134,6 @@ class Player:
         return self.guess
 
     '''
-    Set the manager id of the game
-    '''
-    def set_manager_id(self, manager_id):
-        self.manager_id = manager_id
-
-    '''
     Kill a player
     '''
     def kill_player(self, player_id):
@@ -163,8 +162,38 @@ class Player:
     Return 1 if the guess is available, 0 if not
     '''
     def validate_guess(self, guessing):
+        try:
+            guessing = int(guessing)
+        except KeyboardInterrupt:
+            exit(1)
+        except:
+            return 0
+        
+        if guessing > len(self.cards) or guessing < 0:
+            return 0
+
         if self.last_player_to_guess():
             if self.guessing_sums + int(guessing) == len(self.players_alive):
                 return 0
             
         return 1
+    
+    '''
+    Clear the player's informations
+    '''
+    def clear(self, players_alive):
+        self.cards = []
+        self.guess = None
+        self.guessings = {i: None for i in range(1, 5)}
+        self.players_alive = players_alive
+        self.still_to_guess = [i for i in players_alive]
+        self.guessing_sums = 0
+        self.waiting_for_response = False
+        self.packet_waiting_response = None
+        self.passing_baston = False
+
+    '''
+    Return True if a player is alive
+    '''
+    def is_player_alive(self, player_id):
+        return player_id in self.players_alive
