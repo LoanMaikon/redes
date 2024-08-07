@@ -13,15 +13,15 @@
 
 \section{Introdução}
 O trabalho consiste em implementar uma plataforma de ``streaming" de vídeo, onde o 
-cliente pode fazer requisições para listar os vídeos disponíveis e para assistir a
-um vídeo. O link para o repositório do projeto é \url{https://github.com/LoanMaikon/redes/tree/main/trabalho1}
+cliente pode fazer requisições para listar os vídeos disponíveis e para assisti-los.
+O link para o repositório do projeto é \url{https://github.com/LoanMaikon/redes/tree/main/trabalho1}
 
-\section{Decisões de implementação}
+\section{Funcionamento dos programas}
 Após rodar \texttt{make}, são gerados os executáveis \texttt{server} e \texttt{client}. 
 O uso dos programas é da seguinte forma: \texttt{sudo ./server <interface>}. Para o
 \texttt{client}, o uso é exatamente o mesmo.
 
-\subsection{Client}
+\subsection{Funcionamento do Client}
 Ao rodar o \texttt{client}, são apresentadas as seguintes opções:
 \begin{enumerate}
     \setlength\itemsep{-0.5em}
@@ -30,16 +30,61 @@ Ao rodar o \texttt{client}, são apresentadas as seguintes opções:
     \item[3-]\texttt{Sair} \textit{\small{- Encerra a execução do programa}}
 \end{enumerate}
 
-\subsection{Server}
-O primeiro passo do \texttt{server} é listar os vídeos disponíveis no diretório \texttt{movies/} e
-armazenar seus nomes em uma estrutura chamada \texttt{movies\_t}, a qual é composta de um vetor de
-strings e um \texttt{unsigned long int} para o tamanho do vetor. Em seguida, o servidor entra em um
-loop principal onde aguarda requisições do cliente.
+\subsection{Funcionamento do Server}
+\begin{itemize}
+    \item\textbf{Inicialização:} O servidor lista os vídeos no diretório \texttt{movies/}
+        e armazena os nomes em uma estrutura \texttt{movies\_t}, que contém um vetor de strings
+        e um \texttt{unsigned long int} para o tamanho do vetor.
 
-No loop principal, são esperadas requisições de listagem e download, outros tipos de pacotes são ignorados.
+    \item\textbf{Loop Principal:} O servidor entra em um loop aguardando requisições
+        de listagem e download. Requisições de outros tipos são ignoradas.
 
-Quando recebe um pedido de listagem, os nomes dos vídeos são enviados usando ``para-espera".
-A ordem de envio é com base nas informações contidas na estrutura \texttt{movies\_t}.
+    \item\textbf{Requisição de Listagem:} Quando uma requisição de listagem é recebida,
+        os nomes dos vídeos são enviados ao cliente na ordem definida pela
+        estrutura \texttt{movies\_t}.
+\end{itemize}
+
+\section{Decisões de implementação}
+
+\subsection{Timeout}
+No socket, foi definido o tempo de espera
+da função \texttt{recv} para 300 ms, assim o processo não fica travado esperando um pacote.
+Assim, foi possível a construção do timeout usando a função \texttt{time()}.
+
+\subsection{Implementação janela deslizante}
+
+\subsubsection*{Cliente:}
+\begin{itemize}
+    \item Mantém um vetor server\_packets de 5 pacotes (buffers de 67 bytes).
+Recebe até 5 pacotes, valida a sequência e corrige pacotes fora de ordem, mantendo
+uma variável para controlar a sequência correta dos pacotes.
+\end{itemize}
+
+\subsubsection*{Servidor:}
+\begin{itemize}
+    \item Utiliza uma lista ligada window\_packet\_t para armazenar pacotes. Cada nodo contém um
+    pacote e um ponteiro para o próximo nodo, e o cabeçalho window\_packet\_head\_t contém ponteiros
+    para o primeiro e o último nodo e um unsigned long int para o tamanho da lista.
+
+    \item O servidor lê arquivos em blocos de 63 KB, quebra-os em pacotes, e os organiza na lista 
+    ligada. Se a quantidade de pacotes restantes for menor que o tamanho da janela, os pacotes antigos
+    são desalocados, e novos pacotes são lidos e concatenados no final da lista. 
+    O primeiro nodo da nova leitura tem uma sequência incrementada em relação ao último pacote 
+    do bloco anterior.
+
+    \item A lista ligada facilita a remoção de pacotes antigos e a adição de novos pacotes,
+        mantendo a janela de pacotes sempre preenchida.
+\end{itemize}
+
+\subsection{Tamanho dos pacotes}
+O tamanho de todos os pacotes ficou fixo em 67 bytes. Incialmente, foi implementado
+com tamanho dinâmico, porém, tornou o código mais complexo e não compensava a economia,
+pois apenas o último pacote de cada bloco de 63 KB teria tamanho diferente.
+
+\subsection{Escape para bytes problemáticos}
+Durante a construção dos pacotes de dados, para todo byte 0x81 e 0x88, é adicionado em seguida
+um byte 0xFF para evitar problemas de interpretação. Não é feito esse tratamento no momento
+do envio dos pacotes com os nomes dos vídeos, pois o intervalo dos bytes dos caracteres é 
+0x20 até 0x7E.
 
 \end{document}
-
