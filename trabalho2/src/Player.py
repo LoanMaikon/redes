@@ -1,13 +1,14 @@
 from .Card import Card
 
 from queue import Queue
+import socket
 
 class Player:
-    def __init__(self, id):
+    def __init__(self, id, ip_next):
         self.id = id
         self.ports = self.set_ports()
-        self.addr1 = ("localhost", self.ports[0])
-        self.addr2 = ("localhost", self.ports[1])
+        self.addr1 = (self.get_local_ip(), self.ports[0])
+        self.addr2 = (ip_next, self.ports[1])
         self.cards = []
         self.baston = id == 1
         self.guess = None
@@ -20,6 +21,12 @@ class Player:
         self.waiting_for_response = False
         self.packet_waiting_response = None
         self.passing_baston = False
+
+    def get_local_ip(self):
+        hostname = socket.gethostname()
+        local_ip = socket.gethostbyname(hostname)
+
+        return local_ip
 
     '''
     Return the player id

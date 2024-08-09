@@ -6,11 +6,13 @@ from src.RoundManager import RoundManager
 
 import src.packets as packets
 
+import sys
+
 SOCKET_BUFFER_SIZE = 1024
 
-def main():
+def main(ip_next):
     player_number = get_input()
-    player = Player(player_number)
+    player = Player(player_number, ip_next)
 
     sock = SocketHandler(player.get_addr1())
     sock.setTimeOut(0.1)
@@ -424,4 +426,9 @@ def estabilish_connection(sock, player):
                 break
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 2:
+        print("Usage: python3 game.py <next_ip>")
+        exit(1)
+
+    ip_next = sys.argv[1]
+    main(ip_next)
